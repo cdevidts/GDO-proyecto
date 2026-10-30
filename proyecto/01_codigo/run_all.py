@@ -33,7 +33,7 @@ def main():
     csv = RESULTADOS / "csv"
     csv.mkdir(exist_ok=True)
     for n, df in politicas.items():
-        df.to_csv(csv / f"sol1_{n.replace(' ', '_').lower()}.csv", index=False)
+        df.to_csv(csv / f"sol1_{n.replace(' ', '_').replace('í', 'i').lower()}.csv", index=False)
     for n, (df, _) in modelos.items():
         df.to_csv(csv / f"{n.split(' (')[0].replace(' ', '_').lower()}.csv", index=False)
     sens1.to_csv(csv / "sensibilidad_parte1.csv", index=False)
@@ -57,6 +57,7 @@ def main():
     with open(RESULTADOS / "resumen.json", "w", encoding="utf-8") as f:
         json.dump(resumen, f, ensure_ascii=False, indent=2, default=float)
 
+    parte3_inventarios.escribir_modelo(inv, multi_res)
     generar_excel.generar(plan, tr, inv, politicas, modelos, sens1, ind, multi_res, SENS1_NOTA)
     graficos.generar(politicas, modelos, ind, multi)
 

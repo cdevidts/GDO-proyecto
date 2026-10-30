@@ -1,0 +1,22 @@
+Modelo E (Solicitud 9) - EOQ multiproducto con espacio y capital (no lineal, convexo)
+Se resuelve en 01_codigo/parte3_inventarios.py (KKT con bisección + verificación SLSQP)
+y se reconstruye con fórmulas en la hoja EOQ_Multiproducto de Resultados_Ventisur.xlsx.
+
+min  sum_i  D_i*S_i/Q_i + h_i*Q_i/2
+s.a. sum_i v_i*Q_i <= V      (multiplicador mu)
+     sum_i c_i*Q_i <= K      (multiplicador lambda)
+     Q_i > 0
+KKT: Q_i = sqrt(2*D_i*S_i / (h_i + 2*mu*v_i + 2*lambda*c_i)), mu, lambda >= 0, holgura complementaria
+
+Datos: componente | D | S | c | h=0,25c | v
+  Motor estándar | 96000 | 180000 | 12000 | 3000.0 | 0.004
+  Motor premium | 24000 | 220000 | 20000 | 5000.0 | 0.005
+  Conjunto hélice-rejilla | 120000 | 150000 | 4500 | 1125.0 | 0.015
+  Módulo electrónico | 60000 | 200000 | 8000 | 2000.0 | 0.0015
+  Control remoto | 24000 | 140000 | 5500 | 1375.0 | 0.001
+
+Escenario Base: V=90, K=1.1e+08 -> mu=5097.8560, lambda=0.059493, costo relevante=34,503,017
+Escenario +10% espacio: V=99, K=1.1e+08 -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798
+Escenario +10% presupuesto: V=90, K=1.21e+08 -> mu=24784.5202, lambda=0.013519, costo relevante=34,116,426
+Escenario Solo espacio (sin capital): V=90, K=1e+18 -> mu=31253.7348, lambda=0.000000, costo relevante=34,089,228
+Escenario Solo capital (sin espacio): V=1e+18, K=1.1e+08 -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798

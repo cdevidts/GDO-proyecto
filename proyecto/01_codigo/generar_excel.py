@@ -4,6 +4,8 @@ Las decisiones (dotación, producción, lotes, multiplicadores) se escriben como
 derivado (capacidades, balance, costos, EOQ, uso de recursos) como FÓRMULAS de Excel, de modo que
 la planilla permite verificar los resultados de Python de forma independiente.
 """
+from pathlib import Path
+
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -46,6 +48,10 @@ def hoja_parametros(wb, plan):
         ("I0", "Inventario inicial", plan["I0"]),
         ("I_fin", "Inventario final requerido", plan["I_fin"]),
         ("I_max", "Capacidad bodega", plan["I_max"]),
+        ("W_min", "Dotación mínima", plan["W_min"]),
+        ("W_max", "Dotación máxima", plan["W_max"]),
+        ("H_max", "Máx. contrataciones/mes", plan["H_max"]),
+        ("F_max", "Máx. despidos/mes", plan["F_max"]),
         ("multa", "Multa contractual ($/mes)", plan["multa"]),
         ("pct", "Umbral multa (% demanda)", plan["pct_multa"]),
     ]
@@ -108,6 +114,8 @@ def hoja_plan(wb, nombre, df, ref, titulo):
     ws.cell(t + 2, 2, f'=IF(AND(SUMPRODUCT(--(F{f0}:F{fin}>G{f0}:G{fin}+0.001))=0,'
                       f'SUMPRODUCT(--(H{f0}:H{fin}>I{f0}:I{fin}+0.001))=0,'
                       f'MAX(J{f0}:J{fin})<={ref["I_max"]},J{fin}>={ref["I_fin"]},K{fin}=0,'
+                      f'MIN(C{f0}:C{fin})>={ref["W_min"]},MAX(C{f0}:C{fin})<={ref["W_max"]},'
+                      f'MAX(D{f0}:D{fin})<={ref["H_max"]},MAX(E{f0}:E{fin})<={ref["F_max"]},'
                       f'SUMPRODUCT(ABS(L{f0}:L{fin}))<0.01,SUMPRODUCT(ABS(M{f0}:M{fin}))<0.01),"OK","REVISAR")')
     ws.cell(t + 2, 2).font = NEGRITA
     for row in ws.iter_rows(min_row=f0, max_row=t, min_col=2, max_col=21):
@@ -259,12 +267,13 @@ def generar(plan, tr, inv, politicas, modelos, sens1, ind, multi_res, sens1_nota
         "",
         "Celdas amarillas = decisiones (regla de la política, solución del solver o multiplicadores KKT).",
         "Celdas blancas = fórmulas de Excel que recalculan capacidades, balances, costos y uso de recursos.",
-        "Cada hoja de plan tiene una celda 'Chequeos' que debe mostrar OK.",
+        "Cada hoja de plan tiene una celda 'Chequeos' (capacidades, bodega, dotación 15-25, ±3, balance, borde) que debe mostrar OK.",
+        "En EOQ_Multiproducto, mu y lambda vienen de Python; los lotes, costos y uso de recursos se recalculan con fórmulas.",
         "",
         "Hojas: Parametros | P1, P2, P3 (Sol. 1) | ModA (Sol. 2) | ModB (Sol. 3) | ModC (Sol. 4) | ModD (Sol. 5)",
         "       Comparacion_Planes | Sensibilidad_P1 | Desagregacion (Sol. 6) | EOQ_Individual (Sol. 7-8)",
         "       EOQ_Multiproducto (Sol. 9-10) | Resumen_Multiproducto",
-        "Los modelos de optimización (.lp) están en 02_resultados/modelos_lp/.",
+        "Modelos: 02_resultados/modelos_lp/ (A-D en .lp, índice 0 = marzo; E = EOQ multiproducto en .txt).",
     ]
     for i, t in enumerate(texto, 1):
         ws.cell(i, 1, t)
@@ -288,4 +297,21 @@ def generar(plan, tr, inv, politicas, modelos, sens1, ind, multi_res, sens1_nota
     hoja_df(wb, "Resumen_Multiproducto", multi_res)
     out = RESULTADOS / "Resultados_Ventisur.xlsx"
     wb.save(out)
+    _cachear_valores(out)
     return out
+
+
+def _cachear_valores(ruta):
+    """Recalcula con LibreOffice (si está instalado) para que el archivo traiga los valores ya calculados."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not shutil.which("soffice"):
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        r = subprocess.run(["soffice", "--headless", "--convert-to", "xlsx", "--outdir", tmp, str(ruta)],
+                           capture_output=True)
+        nuevo = Path(tmp) / ruta.name
+        if r.returncode == 0 and nuevo.exists():
+            shutil.move(str(nuevo), ruta)

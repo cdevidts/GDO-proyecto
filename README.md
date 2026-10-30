@@ -25,8 +25,9 @@ proyecto/
     generar_excel.py, graficos.py Respaldos (planilla con fórmulas y figuras)
     run_all.py                    Ejecuta todo
   02_resultados/                  Salidas generadas
-    Resultados_Ventisur.xlsx      Planilla de respaldo con fórmulas que recalculan todo
-    modelos_lp/                   Modelos de optimización exportados (.lp, se abren en cualquier solver)
+    Resultados_Ventisur.xlsx      Planilla con fórmulas que recalculan balances, costos, EOQ y recursos
+    modelos_lp/                   Modelos A–D (.lp; índice 0 = marzo, el lado derecho ya incluye d − I0)
+                                  y Modelo E (EOQ multiproducto, no lineal) documentado en .txt
     csv/, figuras/, resumen.json
   03_informe/                     Informe técnico (≤ 6 páginas): informe.md → .docx y .pdf
   04_presentacion/                Presentación de 5 min (.pptx) y guía de preparación de la defensa
@@ -34,11 +35,15 @@ proyecto/
 
 ## Cómo reproducir
 
+Requisitos: Python 3.10+, y para el informe `pandoc` y Node.js con Playwright
+(`npm i playwright && npx playwright install chromium`). LibreOffice es opcional: si está,
+la planilla se guarda con los valores ya calculados.
+
 ```bash
 pip install -r proyecto/01_codigo/requirements.txt
 cd proyecto/01_codigo && python run_all.py                 # resultados, Excel, figuras y modelos .lp
-cd ../03_informe && python construir_informe.py           # informe (requiere pandoc y Node + Playwright)
-cd ../04_presentacion && python construir_presentacion.py # presentación (requiere python-pptx)
+cd ../03_informe && python construir_informe.py           # informe (pandoc + Node/Playwright)
+cd ../04_presentacion && python construir_presentacion.py # presentación
 ```
 
 ## Resultados principales

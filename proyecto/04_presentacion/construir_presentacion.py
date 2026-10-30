@@ -88,7 +88,7 @@ vinetas(s, ["P1: estable para personas y proveedores, pero guarda unidades 5–7
             "P2: una HE ($2.500) cuesta menos que 2,5 meses de mantención → la mejor regla simple",
             "P3: casi sin inventario, pero cada contratación ($2,5 MM) y despido ($3 MM) pesa más; inestable"],
         1.2, 11.0, 31, 7, 17)
-nota(s, "40 s. Énfasis: la diferencia no es la masa laboral (igual) sino el mecanismo. Umbral: si HE > $4.917/u, P3 supera a P2.")
+nota(s, "35 s. Énfasis: la diferencia no es la masa laboral (igual) sino el mecanismo. Umbral: si HE > $4.917/u, P3 supera a P2.")
 
 # 3. Modelo A
 s = prs.slides.add_slide(VACIO)
@@ -102,7 +102,7 @@ vinetas(s, ["Balance:  I(t−1) − B(t−1) + R + O − d = I − B",
             "  Pendientes dic–ene: atrasar ($750) es más barato que adelantar ($1.000/mes)",
             "−14,25 MM$ (−4,5 %) vs la mejor política simple"], 1.2, 3.4, 15.5, 14, 15)
 s.shapes.add_picture(str(FIG / "fig1_planes.png"), Cm(16.6), Cm(5.0), width=Cm(16.9))
-nota(s, "60 s. Contraintuitivo: despedir y luego usar HE al 100 %; capacidad ociosa en marzo/mayo; atrasos con inventario antes. Todo por b<h y HE < 3 meses de mantención.")
+nota(s, "50 s. Contraintuitivo: despedir y luego usar HE al 100 %; capacidad ociosa en marzo/mayo; atrasos con inventario antes. Todo por b<h y HE < 3 meses de mantención.")
 
 # 4. B, C y D
 s = prs.slides.add_slide(VACIO)
@@ -145,7 +145,7 @@ tabla(s, [["Componente", "D anual", "h=0,25c", "Q*", "ROP = d·L", "Espacio", "C
       1.2, 3.6, 31.4, 0.85, 13)
 vinetas(s, ["Q* dice cuánto, ROP dice cuándo; L < T en todos → un pedido en tránsito como máximo",
             "Infactible en ambos recursos: cada EOQ ignora que compite por bodega y capital"], 1.2, 13.6, 31, 4, 16)
-nota(s, "40 s. Supuestos EOQ ← tasa estable de la Parte II. Costo relevante individual 33,78 MM$/año.")
+nota(s, "35 s. Supuestos EOQ ← tasa estable de la Parte II. Costo relevante individual 33,78 MM$/año.")
 
 # 7. Multiproducto y sensibilidad
 s = prs.slides.add_slide(VACIO)
@@ -161,7 +161,7 @@ vinetas(s, ["Lotes −18 % a −21 %; 94 → 116 pedidos/año; +0,72 MM$/año",
             "Activa ≠ valiosa: al ampliar bodega el capital limita casi de inmediato",
             "Más presupuesto vale 74× más que más bodega"], 1.2, 10.8, 18.5, 8, 15)
 s.shapes.add_picture(str(FIG / "fig3_lotes.png"), Cm(20.2), Cm(5.5), width=Cm(13.4))
-nota(s, "50 s. μ = 5.098 $/m³-año y λ = 0,0595 $/$-año son valores marginales locales; al relajar cambian.")
+nota(s, "40 s. μ = 5.098 $/m³-año y λ = 0,0595 $/$-año son valores marginales locales; al relajar cambian.")
 
 # 8. Recomendación integrada
 s = prs.slides.add_slide(VACIO)

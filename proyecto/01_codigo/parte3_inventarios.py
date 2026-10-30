@@ -126,6 +126,33 @@ def tabla_multiproducto(inv, V, K, escenario):
     return df, res
 
 
+def escribir_modelo(inv, resumenes):
+    """Deja el modelo no lineal de la Sol. 9 documentado junto a los .lp de la Parte I."""
+    from datos import RESULTADOS
+
+    lineas = [
+        "Modelo E (Solicitud 9) - EOQ multiproducto con espacio y capital (no lineal, convexo)",
+        "Se resuelve en 01_codigo/parte3_inventarios.py (KKT con bisección + verificación SLSQP)",
+        "y se reconstruye con fórmulas en la hoja EOQ_Multiproducto de Resultados_Ventisur.xlsx.",
+        "",
+        "min  sum_i  D_i*S_i/Q_i + h_i*Q_i/2",
+        "s.a. sum_i v_i*Q_i <= V      (multiplicador mu)",
+        "     sum_i c_i*Q_i <= K      (multiplicador lambda)",
+        "     Q_i > 0",
+        "KKT: Q_i = sqrt(2*D_i*S_i / (h_i + 2*mu*v_i + 2*lambda*c_i)), mu, lambda >= 0, holgura complementaria",
+        "",
+        "Datos: componente | D | S | c | h=0,25c | v",
+    ]
+    for n, c in inv["comp"].items():
+        lineas.append(f"  {n} | {c['D']} | {c['S']} | {c['c']} | {c['i'] * c['c']} | {c['v']}")
+    lineas.append("")
+    for r in resumenes.to_dict("records"):
+        lineas.append(f"Escenario {r['Escenario']}: V={r['V']:g}, K={r['K']:g} -> mu={r['mu']:.4f}, "
+                      f"lambda={r['lam']:.6f}, costo relevante={r['Costo_relevante']:,.0f}")
+    (RESULTADOS / "modelos_lp").mkdir(parents=True, exist_ok=True)
+    (RESULTADOS / "modelos_lp" / "ModeloE_Sol9_EOQ_multiproducto.txt").write_text("\n".join(lineas) + "\n", encoding="utf-8")
+
+
 def ejecutar():
     _, _, inv = cargar()
     ind = eoq_individual(inv)

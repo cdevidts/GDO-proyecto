@@ -6,17 +6,17 @@ Todas las cifras salen de `02_resultados/` (Excel, CSV o `resumen.json`).
 
 ---
 
-## Guion de 5 minutos (8 diapositivas)
+## Guion de 5 minutos (8 diapositivas, total 4:35 + margen)
 
 | Diap. | Tiempo | Mensaje central |
 |---|---|---|
 | 1 Portada | 0:15 | Plan agregado a 12 meses y, después, la compra de 5 componentes |
-| 2 Políticas simples | 0:40 | Mismo costo laboral (288 MM$); cambia el mecanismo: inventario, HE o personal |
-| 3 Modelo A | 1:00 | Combina los mecanismos: 18 trabajadores, HE en el peak, inventario corto y atrasos baratos |
+| 2 Políticas simples | 0:35 | Mismo costo laboral (288 MM$); cambia el mecanismo: inventario, HE o personal |
+| 3 Modelo A | 0:50 | Combina los mecanismos: 18 trabajadores, HE en el peak, inventario corto y atrasos baratos |
 | 4 B, C y Sol. 5 | 0:45 | Binaria con M; servicio completo cuesta solo 0,35 MM$ |
 | 5 Recomendación agregada | 0:30 | Plan Sol. 5 + seguro de 19 trabajadores |
-| 6 Componentes y EOQ | 0:40 | Tasas constantes → EOQ; infactible en espacio y capital |
-| 7 Multiproducto | 0:50 | Ambas activas, pero el presupuesto vale 74 veces más |
+| 6 Componentes y EOQ | 0:35 | Tasas constantes → EOQ; infactible en espacio y capital |
+| 7 Multiproducto | 0:40 | Ambas activas, pero el presupuesto vale 74 veces más |
 | 8 Integración | 0:30 | Conectar las tres partes |
 
 ---
@@ -77,6 +77,7 @@ Todas las cifras salen de `02_resultados/` (Excel, CSV o `resumen.json`).
 - **¿Por qué +10 % de espacio ahorra tan poco (5.219)?** Con solo la restricción de capital, los lotes ocupan 92,07 m³: de los 9 m³ nuevos solo se usan 2,07 y el espacio deja de estar activo ($\mu = 0$).
 - **¿Por qué +10 % de presupuesto ahorra 386.591?** Se aprovecha completo; el espacio sigue activo y $\mu$ sube (24.785) porque ahora la bodega es lo que más limita; $\lambda$ baja a 0,0135 (rendimientos decrecientes).
 - **"Activa" vs "valor marginal"**: activa = se usa al 100 %. Su valor depende del multiplicador, que es *local* y cambia al relajar; dos restricciones activas pueden valer muy distinto.
+- **¿Y si solo existiera una de las dos restricciones?** Solo espacio: 34.089.228 $/año ($\mu$ = 31.254), pero usaría 125,1 MM$ de capital. Solo capital: 34.497.798 $/año ($\lambda$ = 0,0636), usando 92,07 m³. Ninguna de las dos por sí sola asegura cumplir la otra.
 - **¿Y si la restricción fuera de inventario promedio ($Q/2$)?** El recurso disponible equivaldría al doble para lotes completos; los EOQ (56,6 m³ y 67,6 MM$ promedio) serían factibles y el problema no tendría restricciones activas. Usamos lotes completos (Sesión 4: espacio para todos los lotes simultáneamente).
 
 ## D7. Integración (10 %)
