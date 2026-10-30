@@ -24,7 +24,7 @@ Todas las cifras salen de `02_resultados/` (Excel, CSV o `resumen.json`).
 ## D1. Políticas simples (10 %)
 
 - **¿Por qué P1 no viola la bodega?** El inventario máximo es 7.000 u (ago–oct) ≤ 7.500. Producción anual 120.000 = demanda total, así que termina en 1.000 = inicial.
-- **¿Por qué P2 tiene capacidad ociosa?** La regla fija 20 trabajadores (10.000 u regulares) pero la demanda de mar–ago es menor; como el inventario debe quedar en 1.000, se produce menos que la capacidad: 6.000 u ociosas.
+- **¿Por qué P2 tiene capacidad ociosa?** La regla fija 20 trabajadores (10.000 u regulares) pero la demanda de mar–ago es menor (ociosidad 500/1.000/1.500/1.500/1.000/500); como el inventario debe quedar en 1.000, se produce menos que la capacidad: 6.000 u ociosas.
 - **¿Cómo se calcula la dotación de P3?** $W_t = \lceil (d_t + I^{obj}_t - I_{t-1}) / 500 \rceil$, acotada por 15–25 y por ±3 respecto del mes anterior. Marzo: (9.500 − 1.000)/500 = 17. Febrero: (10.500 + 1.000)/500 = 23.
 - **¿Por qué las tres tienen igual costo laboral?** Las tres suman 240 trabajador-mes (P3: 17+18+17+17+18+19+20+20+23+25+23+23 = 240).
 - **¿Qué pasa si sube el costo de mantener?** P1 sube 52.000 $ por cada $1 de aumento (52.000 u-mes); P2 sube 12.000 por $1; P3 casi no cambia.
@@ -36,7 +36,7 @@ Todas las cifras salen de `02_resultados/` (Excel, CSV o `resumen.json`).
 - **¿Por qué $W, H, F$ enteras y la producción continua?** No existen fracciones de trabajador; la producción es de miles de unidades y redondear no cambia la decisión. La relajación lineal da 300,68 MM$ (diferencia 0,07 MM$).
 - **¿Por qué no se exige usar primero la regular antes de HE?** Porque la regular ya está pagada (costo 0 marginal) y la HE cuesta $2.500: el óptimo lo hace solo (Guía de Modelos, pregunta 1e).
 - **¿Puede haber $I_t > 0$ y $B_t > 0$ a la vez?** En el óptimo no: ambos cuestan, y reducir los dos en la misma cantidad mantiene el balance y baja el costo.
-- **¿Por qué despide 2 en marzo?** Un trabajador cuesta 14,4 MM$/año; su capacidad extra solo sirve en el peak. Sus 500 u/mes de peak con HE cuestan 1,25 MM$/mes. Mantener 20 cuesta 306,5 MM$ (con cero pendientes) vs 301,1.
+- **¿Por qué despide 2 en marzo?** Conservar un trabajador cuesta 14,4 MM$/año (11,4 netos del despido evitado), pero sus 500 u/mes solo se necesitan sep–feb; cubrir esas ~3.000 u con HE cuesta ≈7,5 MM$. Solo convendría mantenerlo si se usara ≈11,5 meses al año. Mantener 20 cuesta 306,5 MM$ (con cero pendientes) vs 301,1.
 - **¿Por qué hay capacidad ociosa en marzo y mayo si luego se paga HE?** Guardar una unidad 3+ meses cuesta ≥ $3.000 > $2.500 de la HE. Solo conviene adelantar 1–2 meses (jun–jul → ago; oct–nov → dic).
 - **¿Por qué acepta atrasos?** $b = 750 < h = 1.000$: atrasar un mes es más barato que adelantar un mes. Incluso con $b = 1.500$ sigue habiendo 200 u de atraso (301,0 MM$), porque adelantar exigiría HE en octubre + 2 meses de inventario (2.500 + 2.000 = 4.500) vs HE en enero + 1 mes de atraso (2.500 + 1.500 = 4.000).
 - **¿Qué pasa si quito el límite de ±3?** Nada (mismo óptimo, 300,75 MM$): esa restricción no está activa.
@@ -52,7 +52,7 @@ Todas las cifras salen de `02_resultados/` (Excel, CSV o `resumen.json`).
 - **¿Por qué Sol. 5 = Sol. 4?** Con $B_t = 0$, la condición $0 \le 0{,}01 d_t$ se cumple siempre con $y_t = 0$; la multa es irrelevante.
 - **Costo de elevar el servicio**: A → C = +350.000 (0,12 %). Se cambian 600 u-mes de atraso por 800 u-mes de inventario (800·1.000 − 600·750 = 350.000).
 - **¿Por qué no recomiendan simplemente el más barato (A)?** Tiene atrasos que gatillarían multas reales (dic 400 > 125; ene 200 > 115) y daño comercial; el sobrecosto de servicio completo es mínimo.
-- **¿Qué tan robusto es el plan?** Con demanda de diciembre +5 % el mismo plan de 18 trabajadores sigue siendo factible sin atrasos (303,9 MM$), adelantando más inventario. El riesgo es la HE al 100 % en nov–feb: el seguro de 19 trabajadores cuesta +1,4 MM$.
+- **¿Qué tan robusto es el plan?** Con demanda de diciembre +5 % el mismo plan de 18 trabajadores sigue siendo factible sin atrasos (303,9 MM$), adelantando más inventario. El riesgo es la HE al 100 % en nov–dic (93 % en ene–feb): el seguro de 19 trabajadores cuesta +1,4 MM$ y deja 700–850 u/mes de holgura en nov, ene y feb (diciembre sigue saturado).
 
 ## D4. Desagregación (10 %)
 

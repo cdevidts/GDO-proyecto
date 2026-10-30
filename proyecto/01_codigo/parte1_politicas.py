@@ -104,6 +104,10 @@ def politica_3(plan):
     disponible) y la dotación entera mínima que la cubre (redondeo hacia arriba), respetando
     límites de dotación y de contrataciones/despidos. El inventario objetivo es 0 salvo en
     febrero, donde es 1.000.
+
+    La regla es miope (no anticipa el límite de +3 contrataciones/mes). Con estos datos basta,
+    porque nunca se necesita más de lo permitido; con otros datos `validar` detectaría el
+    faltante y habría que adelantar contrataciones.
     """
     T = len(plan["meses"])
     W, H, F, R, I = [], [], [], [], []

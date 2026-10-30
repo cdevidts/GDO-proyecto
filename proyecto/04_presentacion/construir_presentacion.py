@@ -126,8 +126,8 @@ titulo(s, "4. Recomendación de planificación agregada",
 s.shapes.add_picture(str(FIG / "fig2_costos.png"), Cm(0.8), Cm(4.6), width=Cm(20.5))
 vinetas(s, ["−13,9 MM$ (−4,4 %) vs P2 y servicio completo",
             "Estable: un solo ajuste de personal",
-            "Riesgo: HE al 100 % en nov–feb",
-            "  Seguro: 19 trabajadores (+1,4 MM$, +0,46 %)",
+            "Riesgo: HE al 100 % en nov–dic (93 % ene–feb)",
+            "  Seguro parcial: 19 trabajadores (+1,4 MM$, +0,46 %)",
             "  Sin despidos (20): +5,4 MM$"], 20.8, 4.0, 12.5, 12, 16)
 nota(s, "30 s. No elegimos solo por costo: estabilidad, servicio y holgura de HE.")
 
@@ -168,7 +168,7 @@ s = prs.slides.add_slide(VACIO)
 titulo(s, "7. Recomendación integrada para Ventisur")
 vinetas(s, ["Producción: plan Sol. 5 (18 trabajadores, HE en el peak, cero pendientes): 301,1 MM$",
             "  Servicio completo cuesta 0,35 MM$ ≪ una sola multa (3 MM$)",
-            "Coherencia: comprar con la tasa estable de 10.000 u/mes exige holgura de componentes en nov–feb",
+            "Coherencia: comprar con la tasa estable de 10.000 u/mes exige holgura de componentes en oct–feb",
             "Compras: usar los lotes multiproducto (2.781 / 1.192 / 4.456 / 2.844 / 1.815) con ROP = d·L",
             "Inversión: priorizar presupuesto (+386 mil $/año) sobre bodega (+5 mil $/año)",
             "  Rentabilidad marginal ≈ 3,5 % anual: comparar con el costo de financiar 11 MM$",
