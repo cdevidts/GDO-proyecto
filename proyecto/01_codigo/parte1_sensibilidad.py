@@ -65,6 +65,10 @@ def ejecutar():
         ("Sol. 5 con costo despido x2 ($6.000.000)", con(plan, c_des=6_000_000), rec, None),
         ("Modelo A con costo pendiente $1.500 (> mantener)", con(plan, c_pend=1500), {}, None),
         ("Modelo A con costo pendiente $250", con(plan, c_pend=250), {}, None),
+        ("Modelo A con costo inventario $500", con(plan, c_inv=500), {}, None),
+        ("Modelo A sin límite de ±3 contrataciones/despidos", con(plan, H_max=None, F_max=None), {}, None),
+        ("Modelo A con productividad HE 100 u/trab-mes", con(plan, prod_he=100), {}, None),
+        ("Sol. 5 con demanda de diciembre +5 % (13.125)", con(plan, demanda=plan["demanda"][:9] + [13125] + plan["demanda"][10:]), rec, None),
     ]
     filas = []
     for nombre, p, kw, extra in casos:

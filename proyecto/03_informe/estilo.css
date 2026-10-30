@@ -1,0 +1,17 @@
+@page { size: Letter; margin: 1.4cm 1.6cm 1.4cm 1.6cm; }
+body { font-family: "Calibri", "Carlito", "Liberation Sans", sans-serif; font-size: 9.2pt; line-height: 1.28; color: #111; max-width: none; margin: 0; }
+header#title-block-header { text-align: center; margin-bottom: 4pt; }
+h1.title { font-size: 15pt; color: #1f3a5f; margin: 0 0 2pt 0; }
+p.subtitle, p.author { margin: 0; font-size: 9pt; color: #333; }
+h1 { font-size: 12pt; color: #1f3a5f; margin: 9pt 0 3pt 0; border-bottom: 1px solid #c8d3e0; padding-bottom: 1pt; }
+h2 { font-size: 10pt; color: #1f3a5f; margin: 6pt 0 2pt 0; }
+p { margin: 2pt 0 4pt 0; text-align: justify; }
+table { border-collapse: collapse; margin: 3pt auto 5pt auto; font-size: 7.6pt; line-height: 1.15; page-break-inside: avoid; }
+th { background: #e8eef6; border-top: 1px solid #888; border-bottom: 1px solid #888; padding: 1.5pt 4pt; text-align: left; }
+td { border-bottom: 1px solid #ddd; padding: 1.2pt 4pt; vertical-align: top; }
+figure { margin: 4pt 0; text-align: center; page-break-inside: avoid; }
+figure img { max-width: 100%; }
+figcaption { font-size: 7.6pt; font-style: italic; color: #444; }
+code { font-size: 8pt; }
+ol { margin: 2pt 0 2pt 16pt; padding: 0; } li { margin-bottom: 2pt; text-align: justify; }
+math[display="block"] { margin: 3pt 0; font-size: 10pt; }
