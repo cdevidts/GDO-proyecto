@@ -1,169 +1,414 @@
-"""Figuras para el informe y la presentación (se guardan en 02_resultados/figuras)."""
+"""Figuras del informe y de la presentación (se guardan en 02_resultados/figuras).
+
+Sistema visual Ventisur, una identidad con dos registros:
+  * fig1_planes, fig2_costos, fig3_lotes -> informe (registro SOBRIO): Inter, grises tinta y un único
+    acento azul para el plan recomendado; ancho de caja carta (7,2 in) para insertarlas a escala 1:1.
+  * slide_fig1..3 -> diapositivas (registro EXPRESIVO): Carlito (= métrica de Calibri), trazos y texto
+    grandes (>= 14 pt), generadas al tamaño exacto de inserción en la diapositiva (escala 1:1).
+
+Colores fijos por serie en TODOS los entregables: P1 oro, P2 naranja, P3 ladrillo (cada uno igual al
+componente de costo que la política usa como mecanismo), Modelo A pizarra, Modelo B gris y el plan
+recomendado (Sol. 5 = Modelo C) en Azul Ventisur. Las barras parten siempre de 0; los ejes de línea que no
+parten de 0 lo declaran. El texto va siempre en tinta, nunca en el color de la serie.
+"""
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Patch  # noqa: E402
+from matplotlib.transforms import offset_copy  # noqa: E402
 
 from datos import RESULTADOS  # noqa: E402
 
 FIG = RESULTADOS / "figuras"
-COL = {"P1": "#9aa5b1", "P2": "#5b8def", "P3": "#e0a33a", "A": "#2f9e72", "B": "#8c5bd6", "C": "#d0504f"}
-plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False})
+
+# ---------------------------------------------------------------- tokens del sistema visual
+SERIE = {"P1": "#d9a336", "P2": "#cc5f22", "P3": "#8c3b2f", "A": "#2b333c", "B": "#98a2ac", "S5": "#1f5fae"}
+COMPONENTE = {"Laboral": "#d9dde2", "Contratación + despido": "#8c3b2f", "Horas extra": "#cc5f22",
+              "Inventario": "#d9a336", "Pendientes": "#2b333c"}  # orden de apilado, de abajo hacia arriba
+ESCENARIO = {"EOQ individual (infactible)": "#dde1e6", "Multiproducto · base": "#1f5fae",
+             "+10 % espacio": "#7fa3d6", "+10 % presupuesto": "#10233d"}
+DEM_FILL, DEM_EDGE, REF = "#e9ecef", "#8f99a3", "#6b7580"
+INK, INK2, INK3, GRID, AXIS, BANDA = "#1c2127", "#4a535d", "#6b7580", "#eceef1", "#b9c0c7", "#eaf1f8"
+ACENTO, BLANCO = "#1f5fae", "#ffffff"
+
+ESTILO_INFORME = {
+    "font.family": "Inter", "font.size": 7.5, "axes.titlesize": 8.5, "axes.titleweight": "semibold",
+    "axes.titlelocation": "left", "axes.titlepad": 6, "axes.labelsize": 7.5, "axes.labelcolor": INK2,
+    "xtick.labelsize": 7, "ytick.labelsize": 7, "xtick.color": INK3, "ytick.color": INK3,
+    "axes.edgecolor": AXIS, "axes.linewidth": 0.6, "axes.spines.top": False, "axes.spines.right": False,
+    "axes.spines.left": False, "axes.grid": True, "axes.grid.axis": "y", "grid.color": GRID,
+    "grid.linewidth": 0.6, "axes.axisbelow": True, "xtick.major.size": 0, "ytick.major.size": 0,
+    "xtick.major.pad": 4, "ytick.major.pad": 4, "legend.frameon": False, "legend.fontsize": 7,
+    "text.color": INK, "axes.titlecolor": INK, "savefig.dpi": 300, "figure.facecolor": BLANCO,
+    "axes.facecolor": BLANCO, "lines.solid_capstyle": "round", "lines.solid_joinstyle": "round",
+    "axes.unicode_minus": True,
+}
+ESTILO_DIAP = {
+    **ESTILO_INFORME, "font.family": "Carlito", "font.size": 14, "axes.titlesize": 14, "xtick.labelsize": 14,
+    "ytick.labelsize": 14, "legend.fontsize": 14, "axes.labelsize": 14, "grid.linewidth": 0.8,
+    "axes.linewidth": 0.9, "xtick.major.pad": 6, "ytick.major.pad": 6, "savefig.dpi": 250,
+}
+CM = 1 / 2.54  # cm -> pulgadas
+TAM_DIAP = {"fig1": (15.7 * CM, 12.6 * CM), "fig2": (19.5 * CM, 11.0 * CM), "fig3": (14.5 * CM, 11.0 * CM)}
+
+# Grosor de línea (pt) por registro: (políticas y Modelo A, recomendado, serie tapada que debe asomar)
+LW_INF = dict(serie=1.3, reco=2.2, solape=2.4, marca=3.4, aro=0.9, dem=0.8, ref=0.7)
+LW_DIAP = dict(serie=2.2, reco=3.5, solape=4.2, marca=7.0, aro=1.4, dem=1.1, ref=1.0)
+
+NOMBRE = {"P1": "P1 Tasa constante", "P2": "P2 Dotación + HE", "P3": "P3 Persecución", "A": "Modelo A",
+          "S5": "Sol. 5 (recomendado)"}
 
 
-def _mes(m):
-    return [x[:3] for x in m]
+# ---------------------------------------------------------------- formato numérico (miles "." y decimal ",")
+def _miles(v, _pos=None):
+    return f"{v:,.0f}".replace(",", ".").replace("-", "−")
 
 
-def _panel_produccion(ax, x, df1, politicas, modelos):
-    """Producción total mensual de las políticas y del óptimo Sol. 5 contra la demanda (línea)."""
-    ax.plot(x, df1.Demanda, color="k", ls=":", lw=1.2, label="Demanda", zorder=1)
-    for n, k, kw in [("Política 1", "P1", dict(marker="o", ms=3)), ("Política 3", "P3", dict(marker="o", ms=3)),
-                     ("Política 2", "P2", dict(marker="o", ms=3, ls="--", lw=1.6, zorder=5))]:
-        df = politicas[n]
-        ax.plot(x, df.Prod_regular + df.Prod_HE, color=COL[k], label=n, **kw)
-    dfa = modelos["Modelo D (Sol. 5)"][0]
-    ax.plot(x, dfa.Prod_regular + dfa.Prod_HE, marker="s", ms=3, color=COL["C"], lw=2, label="Óptimo Sol. 5", zorder=4)
-    ax.set_xticks(x, _mes(df1.Mes))
-    ax.set_ylabel("Unidades / mes (eje desde 7.000)")
-    ax.set_ylim(7000, 13000)
-    ax.set_title("Producción total vs demanda")
+def _dec(v, n=2):
+    return f"{v:,.{n}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def _panel_inventario(ax, x, df1, politicas, modelos, texto_fs=7):
-    etiquetas = [("Política 1", "P1"), ("Política 2", "P2"), ("Política 3", "P3")]
-    for n, k in etiquetas:
-        ax.plot(x, politicas[n].Inventario_final, marker="o", ms=3, color=COL[k], label=n)
-    for n, k in [("Modelo A (Sol. 2)", "A"), ("Modelo D (Sol. 5)", "C")]:
-        df = modelos[n][0]
-        ax.plot(x, df.Inventario_final - df.Pendientes, marker="s", ms=3, color=COL[k], lw=2,
-                label=n.split(" (")[0] + " (I−B)" if k == "A" else "Óptimo Sol. 5")
-    ax.axhline(0, color="k", lw=0.6)
-    ax.axhline(7500, color="grey", ls=":", lw=0.8)
-    ax.text(0, 7550, "capacidad bodega 7.500", fontsize=texto_fs, color="grey")
-    ax.set_xticks(x, _mes(df1.Mes))
-    ax.set_title("Inventario neto al cierre de mes")
+def _mes(meses):
+    return [m[:3] for m in meses]
 
 
-def fig_politicas(politicas, modelos):
-    FIG.mkdir(parents=True, exist_ok=True)
-    df1 = next(iter(politicas.values()))
-    x = np.arange(len(df1))
-    fig, axs = plt.subplots(1, 2, figsize=(9, 3.1))
-    ax = axs[0]
-    _panel_produccion(ax, x, df1, politicas, modelos)
-    ax.legend(fontsize=7, ncol=2, frameon=False)
-    ax = axs[1]
-    _panel_inventario(ax, x, df1, politicas, modelos)
-    ax.legend(fontsize=7, frameon=False)
-    fig.tight_layout()
-    fig.savefig(FIG / "fig1_planes.png", dpi=200)
-    plt.close(fig)
+# ---------------------------------------------------------------- datos
+def _planes(politicas, modelos):
+    """Producción total e inventario neto (I − B) de las series que se dibujan en fig1."""
+    dfs = {"P1": politicas["Política 1"], "P2": politicas["Política 2"], "P3": politicas["Política 3"],
+           "A": modelos["Modelo A (Sol. 2)"][0], "S5": modelos["Modelo D (Sol. 5)"][0]}
+    prod = {k: (d.Prod_regular + d.Prod_HE).to_numpy(float) for k, d in dfs.items()}
+    neto = {k: (d.Inventario_final - d.Pendientes).to_numpy(float) for k, d in dfs.items()}
+    return dfs["P1"].Demanda.to_numpy(float), _mes(dfs["P1"].Mes), prod, neto
 
 
 def _datos_costos(politicas, modelos):
-    nombres, comp = [], {k: [] for k in ["Laboral", "Contrat.+Despido", "Horas extra", "Inventario", "Pendientes", "Multa"]}
-    planes = list(politicas.items()) + [(k, v[0]) for k, v in modelos.items()]
-    for n, df in planes:
-        nombres.append(n.replace(" (Sol. ", "\n(Sol. ").replace("Política", "Pol."))
-        comp["Laboral"].append(df.C_laboral.sum() / 1e6)
-        comp["Contrat.+Despido"].append((df.C_contratacion.sum() + df.C_despido.sum()) / 1e6)
-        comp["Horas extra"].append(df.C_HE.sum() / 1e6)
-        comp["Inventario"].append(df.C_inventario.sum() / 1e6)
-        comp["Pendientes"].append(df.C_pendientes.sum() / 1e6)
-        comp["Multa"].append(df.get("C_multa", df.C_pendientes * 0).sum() / 1e6)
-    return nombres, comp
+    """Componentes de costo (MM$) por plan. La multa vale 0 en todos los planes: no se dibuja."""
+    planes = [("P1", politicas["Política 1"]), ("P2", politicas["Política 2"]), ("P3", politicas["Política 3"]),
+              ("A", modelos["Modelo A (Sol. 2)"][0]), ("B", modelos["Modelo B (Sol. 3)"][0]),
+              ("C", modelos["Modelo C (Sol. 4)"][0]), ("S5", modelos["Modelo D (Sol. 5)"][0])]
+    f = {"Laboral": lambda d: d.C_laboral, "Contratación + despido": lambda d: d.C_contratacion + d.C_despido,
+         "Horas extra": lambda d: d.C_HE, "Inventario": lambda d: d.C_inventario,
+         "Pendientes": lambda d: d.C_pendientes}
+    comp = {k: np.array([g(d).sum() / 1e6 for _, d in planes]) for k, g in f.items()}
+    multa = sum(d["C_multa"].sum() if "C_multa" in d else 0 for _, d in planes)
+    assert multa == 0, "La multa ya no vale 0: agregarla a la pila y a la leyenda (color #98a2ac)."
+    return [k for k, _ in planes], comp
 
 
-def _dibujar_costos(ax, nombres, comp, fs_total, leyenda):
-    base = np.zeros(len(nombres))
-    colores = ["#c9d3df", "#e0a33a", "#5b8def", "#2f9e72", "#d0504f", "#8c5bd6"]
-    for (k, v), c in zip(comp.items(), colores):
-        ax.bar(nombres, v, bottom=base, color=c, label=k)
-        base += np.array(v)
-    for i, tot in enumerate(base):
-        ax.text(i, tot + 4, f"{tot:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-                ha="center", fontsize=fs_total, fontweight="bold")
-    ax.set_ylim(0, 365)  # eje desde cero: el costo laboral (~260-290) es la mayor parte de cada barra
-    ax.set_ylabel("MM$")
-    ax.set_title("Costo total por plan y su composición (MM$)")
-    leyenda(ax)
+def _datos_lotes(ind, multi):
+    q = {"EOQ individual (infactible)": ind.Q.to_numpy(float)}
+    for e, n in [("Base", "Multiproducto · base"), ("+10% espacio", "+10 % espacio"),
+                 ("+10% presupuesto", "+10 % presupuesto")]:
+        q[n] = multi[multi.Escenario == e].set_index("Componente").loc[list(ind.Componente), "Q"].to_numpy(float)
+    return q
+
+
+# ---------------------------------------------------------------- piezas comunes
+def _poner_titulos(fig, ax, tit, sub, fs_t=8.5, fs_s=7.2, sep=2.5):
+    """Título (la conclusión, semibold tinta) + subtítulo (qué se mide, en qué unidad; tinta secundaria)
+    encima del área de datos. Quedan fuera de tight_layout: el espacio se reserva con `_techo`."""
+    y_sub = 9.0
+    y_tit = y_sub + fs_s * 1.25 + sep
+    for txt, dy, kw in [(sub, y_sub, dict(fontsize=fs_s, color=INK2)),
+                        (tit, y_tit, dict(fontsize=fs_t, color=INK, fontweight="semibold"))]:
+        t = ax.text(0, 1, txt, ha="left", va="bottom", clip_on=False,
+                    transform=offset_copy(ax.transAxes, fig=fig, x=0, y=dy, units="points"), **kw)
+        t.set_in_layout(False)
+        t._es_titulo, t._dy = True, dy
+    return y_tit + fs_t * 1.25  # alto del bloque de títulos (pt)
+
+
+def _techo(fig, alto_pt):
+    """Fracción superior de la figura que queda libre para el bloque de títulos."""
+    return 1 - (alto_pt + 2) / 72 / fig.get_figheight()
+
+
+def _piso(fig, filas, fs, aire=9.0):
+    """Fracción inferior reservada para una leyenda de `filas` filas bajo el gráfico (+ aire en pt)."""
+    return (filas * fs * 1.45 + aire) / 72 / fig.get_figheight()
+
+
+def _alinear_titulos(fig, axs):
+    """Alinea títulos y subtítulos con el borde izquierdo de las etiquetas del eje y (llamar tras el layout)
+    y verifica que no se salgan de la figura."""
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    for ax in axs:
+        dx = (ax.yaxis.get_tightbbox(r).x0 - ax.get_window_extent(r).x0) * 72 / fig.dpi
+        for t in ax.texts:
+            if getattr(t, "_es_titulo", False):
+                t.set_transform(offset_copy(ax.transAxes, fig=fig, x=dx, y=t._dy, units="points"))
+    fig.canvas.draw()
+    for ax in axs:
+        for t in ax.texts:
+            if getattr(t, "_es_titulo", False):
+                assert t.get_window_extent(r).x1 <= fig.bbox.x1 + 0.5, f"Título fuera de la figura: {t.get_text()}"
+
+
+def _linea_demanda(ax, x, dem, piso, lw):
+    ax.fill_between(x, piso, dem, color=DEM_FILL, lw=0, zorder=1)
+    ax.plot(x, dem, color=DEM_EDGE, lw=lw["dem"], zorder=2)
+
+
+def _serie(ax, x, y, k, lw, solape=False, z=3):
+    if k == "S5":
+        ax.plot(x, y, color=SERIE[k], lw=lw["reco"], marker="o", ms=lw["marca"], mfc=SERIE[k], mec=BLANCO,
+                mew=lw["aro"], zorder=8)
+    else:
+        ax.plot(x, y, color=SERIE[k], lw=lw["solape"] if solape else lw["serie"], zorder=z)
+
+
+def _manijas_planes(lw, demanda=True, ms=None):
+    h, n = [], []
+    if demanda:
+        h.append(Patch(facecolor=DEM_FILL, edgecolor=DEM_EDGE, lw=lw["dem"]))
+        n.append("Demanda")
+    for k in ["P1", "P2", "P3", "A"]:
+        h.append(Line2D([], [], color=SERIE[k], lw=lw["serie"] + 0.3))
+        n.append(NOMBRE[k])
+    h.append(Line2D([], [], color=SERIE["S5"], lw=lw["reco"], marker="o", ms=ms or lw["marca"],
+                    mec=BLANCO, mew=lw["aro"]))
+    n.append(NOMBRE["S5"])
+    return h, n
+
+
+def _panel_produccion(ax, x, dem, prod, lw):
+    """Producción total mensual de P1-P3 y de Sol. 5 sobre la silueta de la demanda (eje desde 7.000).
+    P3 coincide con la demanda y con P2 casi todo el año: se dibuja primero y más gruesa para que asome."""
+    _linea_demanda(ax, x, dem, 7000, lw)
+    _serie(ax, x, prod["P3"], "P3", lw, solape=True)
+    _serie(ax, x, prod["P1"], "P1", lw, z=4)
+    _serie(ax, x, prod["P2"], "P2", lw, z=5)
+    _serie(ax, x, prod["S5"], "S5", lw)
+    ax.set_ylim(7000, 13200)
+    ax.set_yticks(range(7000, 13001, 1000))
+    ax.yaxis.set_major_formatter(_miles)
+    ax.set_xlim(-0.35, len(x) - 0.65)
+
+
+def _panel_inventario(ax, x, neto, lw):
+    """Inventario neto al cierre (I − B) con la capacidad de bodega como referencia continua."""
+    ax.axhline(0, color=AXIS, lw=0.8, zorder=1)
+    ax.axhline(7500, color=REF, lw=lw["ref"], zorder=2)
+    _serie(ax, x, neto["P3"], "P3", lw, solape=True)
+    _serie(ax, x, neto["P1"], "P1", lw, z=4)
+    _serie(ax, x, neto["P2"], "P2", lw, z=4)
+    _serie(ax, x, neto["A"], "A", lw, z=5)
+    _serie(ax, x, neto["S5"], "S5", lw)
+    ax.yaxis.set_major_formatter(_miles)
+    ax.set_xlim(-0.35, len(x) - 0.65)
+
+
+def _dibujar_costos(ax, planes, comp, ancho, gap):
+    xs = np.arange(len(planes))
+    i5 = planes.index("S5")
+    ax.axvspan(i5 - 0.47, i5 + 0.47, color=BANDA, lw=0, zorder=0)
+    base = np.zeros(len(planes))
+    for k, v in comp.items():
+        if not v.any():
+            continue
+        ax.bar(xs, v, ancho, bottom=base, color=COMPONENTE[k], edgecolor=BLANCO, linewidth=gap, zorder=2)
+        base += v
+    return xs, base
+
+
+def _dibujar_lotes(ax, q, ancho, gap):
+    n = len(next(iter(q.values())))
+    xs = np.arange(n)
+    for j, (e, v) in enumerate(q.items()):
+        ax.bar(xs + (j - 1.5) * ancho, v, ancho, color=ESCENARIO[e], edgecolor=BLANCO, linewidth=gap, zorder=2)
+    ax.yaxis.set_major_formatter(_miles)
+    ax.set_xlim(-0.6, n - 0.4)
+    return xs
+
+
+def _guardar(fig, nombre, **kw):
+    FIG.mkdir(parents=True, exist_ok=True)
+    fig.savefig(FIG / nombre, facecolor=fig.get_facecolor(), **kw)
+    plt.close(fig)
+
+
+# ================================================================ INFORME (registro sobrio)
+def fig_politicas(politicas, modelos):
+    dem, meses, prod, neto = _planes(politicas, modelos)
+    x = np.arange(len(dem))
+    lw = LW_INF
+    with plt.rc_context(ESTILO_INFORME):
+        fig, (a1, a2) = plt.subplots(1, 2, figsize=(7.2, 2.6))
+        _panel_produccion(a1, x, dem, prod, lw)
+        a1.set_xticks(x, meses)
+        a1.text(0.0, 7230, "Demanda", fontsize=6.8, color=INK3, zorder=3)
+        a1.text(1.5, 10140, "P1", fontsize=6.8, color=INK, ha="center", va="bottom", fontweight="semibold")
+        alto = _poner_titulos(fig, a1, "Sol. 5 sigue la demanda con HE en el peak; P1 produce plano",
+                              "Producción total mensual (u) · eje desde 7.000", fs_t=8)
+
+        _panel_inventario(a2, x, neto, lw)
+        a2.set_ylim(-1150, 8300)
+        a2.set_yticks(range(0, 8001, 2000))
+        a2.set_xticks(x, meses)
+        a2.text(len(x) - 0.65, 7630, "Capacidad de bodega 7.500", fontsize=6.6, color=INK3, ha="right",
+                va="bottom")
+        a2.text(6.0, 6800, "P1", fontsize=6.8, color=INK, ha="center", va="top", fontweight="semibold")
+        a2.text(1.5, 1180, "P2", fontsize=6.8, color=INK, ha="center", va="bottom", fontweight="semibold")
+        a2.text(9.0, -520, "Modelo A", fontsize=6.6, color=INK, ha="center", va="top")
+        _poner_titulos(fig, a2, "P1 acumula hasta 7.000 u; Sol. 5 guarda como máximo 1.000 u",
+                       "Inventario neto al cierre de mes, I − B (u)", fs_t=8)
+
+        h, n = _manijas_planes(lw)
+        fig.legend(h, n, ncol=6, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.8,
+                   handleheight=0.8, columnspacing=1.4, fontsize=6.8)
+        fig.tight_layout(w_pad=2.5, rect=(0, _piso(fig, 1, 6.8), 1, _techo(fig, alto)), pad=0.25)
+        _alinear_titulos(fig, [a1, a2])
+        _guardar(fig, "fig1_planes.png")
 
 
 def fig_costos(politicas, modelos):
-    nombres, comp = _datos_costos(politicas, modelos)
-    fig, ax = plt.subplots(figsize=(9, 3.4))
-    _dibujar_costos(ax, nombres, comp, 7.5, lambda a: a.legend(fontsize=7, ncol=6, frameon=False, loc="upper center",
-                                                                 bbox_to_anchor=(0.5, -0.2)))
-    ax.tick_params(axis="x", labelsize=7.5)
-    fig.tight_layout()
-    fig.savefig(FIG / "fig2_costos.png", dpi=200)
-    plt.close(fig)
-
-
-def _dibujar_lotes(ax, ind, multi, etiquetas):
-    x = np.arange(len(ind))
-    esc = ["Base", "+10% espacio", "+10% presupuesto"]
-    w = 0.2
-    ax.bar(x - 1.5 * w, ind.Q, w, color="#c9d3df", label="EOQ individual (infactible)")
-    for k, (e, c) in enumerate(zip(esc, ["#2f9e72", "#5b8def", "#e0a33a"])):
-        q = multi[multi.Escenario == e].Q.values
-        ax.bar(x + (k - 0.5) * w, q, w, color=c, label=f"Multiproducto – {e}")
-    ax.set_xticks(x, etiquetas)
-    ax.set_ylabel("Tamaño de lote (u.)")
+    planes, comp = _datos_costos(politicas, modelos)
+    et = {"P1": "P1", "P2": "P2", "P3": "P3", "A": "Modelo A\nSol. 2", "B": "Modelo B\nSol. 3",
+          "C": "Modelo C\nSol. 4", "S5": "Sol. 5\nrecomendado"}
+    with plt.rc_context(ESTILO_INFORME):
+        fig, ax = plt.subplots(figsize=(7.2, 2.6))
+        xs, tot = _dibujar_costos(ax, planes, comp, ancho=0.56, gap=0.7)
+        for i, t in enumerate(tot):
+            reco = planes[i] == "S5"
+            ax.text(i, t + 5, _dec(t, 2), ha="center", va="bottom", fontsize=7, color=INK,
+                    fontweight="semibold" if reco else "normal")
+        ax.set_xticks(xs, [et[p] for p in planes])
+        lab = ax.get_xticklabels()[planes.index("S5")]
+        lab.set_color(INK)
+        lab.set_fontweight("semibold")
+        ax.set_ylim(0, 370)
+        ax.set_yticks(range(0, 301, 100))
+        ax.set_xlim(-0.55, len(planes) - 0.45)
+        alto = _poner_titulos(fig, ax, "Sol. 5: −13,9 MM$ (−4,4 %) vs P2 y con servicio completo",
+                           "Costo total anual por plan y su composición (MM$)")
+        h = [Patch(facecolor=c, edgecolor="none") for k, c in COMPONENTE.items() if comp[k].any()]
+        n = [k for k in COMPONENTE if comp[k].any()]
+        fig.legend(h, n, ncol=len(n), loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.1,
+                   handleheight=0.9, columnspacing=1.6, fontsize=6.8)
+        fig.tight_layout(rect=(0, _piso(fig, 1, 6.8), 1, _techo(fig, alto)), pad=0.25)
+        _alinear_titulos(fig, [ax])
+        _guardar(fig, "fig2_costos.png")
 
 
 def fig_lotes(ind, multi):
-    fig, ax = plt.subplots(figsize=(9, 2.8))
-    _dibujar_lotes(ax, ind, multi, [c.replace("Conjunto ", "") for c in ind.Componente])
-    ax.set_title("Tamaños de lote: EOQ individual vs EOQ restringido por espacio y capital")
-    ax.legend(fontsize=7, ncol=2, frameon=False)
-    fig.tight_layout()
-    fig.savefig(FIG / "fig3_lotes.png", dpi=200)
-    plt.close(fig)
+    q = _datos_lotes(ind, multi)
+    et = [c.replace("Conjunto hélice-rejilla", "Hélice–rejilla") for c in ind.Componente]
+    with plt.rc_context(ESTILO_INFORME):
+        fig, ax = plt.subplots(figsize=(7.2, 2.35))
+        xs = _dibujar_lotes(ax, q, ancho=0.19, gap=0.8)
+        ax.set_xticks(xs, et)
+        ax.set_ylim(0, 6000)
+        ax.set_yticks(range(0, 6001, 1000))
+        alto = _poner_titulos(fig, ax, "Los lotes multiproducto son 18–21 % menores que el EOQ individual",
+                           "Tamaño de lote por componente (u) · +10 % presupuesto agranda todos salvo la "
+                           "hélice–rejilla; +10 % espacio casi no los cambia")
+        h = [Patch(facecolor=c, edgecolor="none") for c in ESCENARIO.values()]
+        fig.legend(h, list(ESCENARIO), ncol=4, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.1,
+                   handleheight=0.9, columnspacing=1.8, fontsize=6.8)
+        fig.tight_layout(rect=(0, _piso(fig, 1, 6.8), 1, _techo(fig, alto)), pad=0.25)
+        _alinear_titulos(fig, [ax])
+        _guardar(fig, "fig3_lotes.png")
+
+
+# ================================================================ DIAPOSITIVAS (registro expresivo)
+def _etiqueta_pastilla(ax, x, y, texto, color, **kw):
+    """Etiqueta directa sobre un relleno de color (texto blanco): solo para la serie recomendada."""
+    ax.text(x, y, texto, color=BLANCO, fontsize=14, fontweight="bold", zorder=10, va="center",
+            bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.5", facecolor=color, edgecolor="none"), **kw)
+
+
+def slide_fig1(politicas, modelos):
+    """Diap. 3: producción (arriba) e inventario neto (abajo), sin título interno (lo da la diapositiva)."""
+    dem, meses, prod, neto = _planes(politicas, modelos)
+    x = np.arange(len(dem))
+    lw = LW_DIAP
+    with plt.rc_context(ESTILO_DIAP):
+        fig, (a1, a2) = plt.subplots(2, 1, figsize=TAM_DIAP["fig1"], sharex=True)
+        _panel_produccion(a1, x, dem, prod, lw)
+        a1.set_ylim(7000, 13400)
+        a1.set_yticks(range(7000, 13001, 2000))
+        a1.text(0.0, 7300, "Demanda", fontsize=14, color=INK3, zorder=3)
+        a1.text(1.6, 10180, "P1", fontsize=14, color=INK, ha="center", va="bottom", fontweight="bold")
+        _etiqueta_pastilla(a1, 11.35, 12350, "Sol. 5", SERIE["S5"], ha="right")
+        a1.text(0, 1.04, "Producción total (u/mes) · eje desde 7.000", transform=a1.transAxes, fontsize=14,
+                color=INK2, ha="left", va="bottom")
+
+        _panel_inventario(a2, x, neto, lw)
+        a2.set_ylim(-1700, 8600)
+        a2.set_yticks(range(0, 8001, 4000))
+        a2.set_xticks(x, meses)
+        a2.text(len(x) - 0.65, 7750, "Bodega 7.500", fontsize=14, color=INK3, ha="right", va="bottom")
+        a2.text(6.0, 6650, "P1", fontsize=14, color=INK, ha="center", va="top", fontweight="bold")
+        a2.text(1.6, 1250, "P2", fontsize=14, color=INK, ha="center", va="bottom", fontweight="bold")
+        a2.text(9.0, -650, "Modelo A", fontsize=14, color=INK, ha="center", va="top")
+        a2.text(0, 1.04, "Inventario neto al cierre, I − B (u)", transform=a2.transAxes, fontsize=14,
+                color=INK2, ha="left", va="bottom")
+
+        h, n = _manijas_planes(lw, ms=8)
+        n = ["Demanda", "P1", "P2", "P3", "Modelo A", "Sol. 5"]
+        fig.legend(h, n, ncol=6, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.5,
+                   handleheight=0.8, columnspacing=1.0, handletextpad=0.5)
+        fig.tight_layout(h_pad=1.6, rect=(0, _piso(fig, 1, 14, 12), 1, 1), pad=0.3)
+        _guardar(fig, "slide_fig1_planes.png")
+
+
+def slide_fig2(politicas, modelos):
+    """Diap. 5: costo por plan; el recomendado con banda, total en negrita y en acento."""
+    planes, comp = _datos_costos(politicas, modelos)
+    et = {"P1": "P1", "P2": "P2", "P3": "P3", "A": "Modelo A", "B": "Modelo B", "C": "Modelo C", "S5": "Sol. 5"}
+    with plt.rc_context(ESTILO_DIAP):
+        fig, ax = plt.subplots(figsize=TAM_DIAP["fig2"])
+        xs, tot = _dibujar_costos(ax, planes, comp, ancho=0.6, gap=1.4)
+        for i, t in enumerate(tot):
+            reco = planes[i] == "S5"
+            ax.text(i, t + 6, _dec(t, 2), ha="center", va="bottom", fontsize=17 if reco else 15,
+                    color=ACENTO if reco else INK, fontweight="bold" if reco else "normal")
+        ax.set_xticks(xs, [et[p] for p in planes])
+        for p, lab in zip(planes, ax.get_xticklabels()):
+            if p == "S5":
+                lab.set_fontsize(15)
+                lab.set_color(INK)
+                lab.set_fontweight("bold")
+        ax.set_ylim(0, 375)
+        ax.set_yticks(range(0, 301, 100))
+        ax.set_xlim(-0.55, len(planes) - 0.45)
+        h = [Patch(facecolor=c, edgecolor="none") for k, c in COMPONENTE.items() if comp[k].any()]
+        n = [k for k in COMPONENTE if comp[k].any()]
+        fig.legend(h, n, ncol=3, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.0,
+                   handleheight=1.0, columnspacing=1.4, handletextpad=0.5)
+        fig.tight_layout(rect=(0, _piso(fig, 2, 14, 16), 1, 1), pad=0.3)
+        _guardar(fig, "slide_fig2_costos.png")
+
+
+def slide_fig3(ind, multi):
+    """Diap. 7: lotes por componente y escenario; el multiproducto base (a implementar) en acento."""
+    q = _datos_lotes(ind, multi)
+    et = ["Motor\nestándar", "Motor\npremium", "Hélice–\nrejilla", "Módulo\nelectrónico", "Control\nremoto"]
+    with plt.rc_context(ESTILO_DIAP):
+        fig, ax = plt.subplots(figsize=TAM_DIAP["fig3"])
+        xs = _dibujar_lotes(ax, q, ancho=0.2, gap=1.2)
+        ax.set_xticks(xs, et)
+        ax.set_ylim(0, 6000)
+        ax.set_yticks(range(0, 6001, 2000))
+        h = [Patch(facecolor=c, edgecolor="none") for c in ESCENARIO.values()]
+        n = ["EOQ individual (infactible)", "Multiproducto · base", "+10 % espacio", "+10 % presupuesto"]
+        fig.legend(h, n, ncol=2, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.0,
+                   handleheight=1.0, columnspacing=1.2, handletextpad=0.5)
+        fig.tight_layout(rect=(0, _piso(fig, 2, 14, 16), 1, 1), pad=0.3)
+        _guardar(fig, "slide_fig3_lotes.png")
 
 
 def fig_slides(politicas, modelos, ind, multi):
-    """Versiones para las diapositivas: se insertan a escala 1:1 (figsize = tamaño final), de modo que
-    el texto queda en 11-12 pt. Las figuras del informe (fig1, fig3) no cambian de formato."""
-    ancho = {"fig1": 16.0 / 2.54, "fig2": 20.3 / 2.54, "fig3": 13.46 / 2.54}  # cm de inserción -> pulgadas
-    with plt.rc_context({"font.size": 12, "legend.fontsize": 11, "axes.titlesize": 12}):
-        # Diap. 3: producción y inventario apilados
-        fig, axs = plt.subplots(2, 1, figsize=(ancho["fig1"], 6.0), sharex=True)
-        df1 = next(iter(politicas.values()))
-        x = np.arange(len(df1))
-        _panel_produccion(axs[0], x, df1, politicas, modelos)
-        axs[0].set_ylabel("u / mes (eje desde 7.000)", fontsize=10)
-        axs[0].legend(ncol=2, frameon=False, fontsize=10.5, loc="upper left")
-        axs[0].set_ylim(7000, 14800)
-        _panel_inventario(axs[1], x, df1, politicas, modelos, texto_fs=10)
-        axs[1].legend(ncol=3, frameon=False, fontsize=10.5, loc="upper center", columnspacing=1.0, handlelength=1.6)
-        axs[1].set_ylim(-600, 11200)
-        axs[1].set_ylabel("Unidades")
-        fig.tight_layout()
-        fig.savefig(FIG / "slide_fig1_planes.png", dpi=200)
-        plt.close(fig)
-
-        # Diap. 5: costos por plan (eje desde 0), leyenda bajo el gráfico
-        nombres, comp = _datos_costos(politicas, modelos)
-        fig, ax = plt.subplots(figsize=(ancho["fig2"], 4.9))
-        _dibujar_costos(ax, nombres, comp, 11,
-                        lambda a: a.legend(ncol=3, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.17)))
-        ax.tick_params(axis="x", labelsize=10)
-        fig.tight_layout()
-        fig.savefig(FIG / "slide_fig2_costos.png", dpi=200)
-        plt.close(fig)
-
-        # Diap. 7: lotes, etiquetas en dos líneas y leyenda de una columna bajo el gráfico
-        fig, ax = plt.subplots(figsize=(ancho["fig3"], 4.6))
-        et = ["Motor\nestándar", "Motor\npremium", "Hélice–\nrejilla", "Módulo\nelectr.", "Control\nremoto"]
-        _dibujar_lotes(ax, ind, multi, et)
-        ax.tick_params(axis="x", labelsize=10)
-        ax.legend(ncol=1, frameon=False, fontsize=10, loc="upper center", bbox_to_anchor=(0.5, -0.2))
-        fig.tight_layout()
-        fig.savefig(FIG / "slide_fig3_lotes.png", dpi=200)
-        plt.close(fig)
+    """Versiones para diapositivas, al tamaño exacto de inserción (figsize = cm / 2,54; insertar 1:1):
+    slide_fig1 15,7 × 12,6 cm · slide_fig2 19,5 × 11,0 cm · slide_fig3 14,5 × 11,0 cm."""
+    slide_fig1(politicas, modelos)
+    slide_fig2(politicas, modelos)
+    slide_fig3(ind, multi)
 
 
 def generar(politicas, modelos, ind, multi):
