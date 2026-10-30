@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventarios desde cero</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--ink:#1c2333;--mute:#5d6679;--line:#e1e5ee;--acc:#3b5bdb;--acc2:#0ca678;--warn:#e8590c;--bad:#e03131;--hl:#fff3bf;--chip:#edf2ff;--ok:#d3f9d8;--no:#ffe3e3}
+@media (prefers-color-scheme:dark){:root{--bg:#11141b;--card:#1a1f2a;--ink:#e7ebf3;--mute:#9aa3b5;--line:#2b3241;--acc:#8ea6ff;--acc2:#38d9a9;--warn:#ffa94d;--bad:#ff8787;--hl:#3b3416;--chip:#222a3a;--ok:#1f3b2a;--no:#3f2224}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header b{font-size:1rem}
+header .sp{flex:1}
+header label{font-size:.88rem;color:var(--mute);display:flex;gap:6px;align-items:center}
+#pend{font-size:.88rem;font-weight:700;color:var(--acc)}
+main{max-width:880px;margin:0 auto;padding:12px 16px 80px}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+nav.toc a{background:var(--chip);color:var(--acc);text-decoration:none;padding:4px 10px;border-radius:999px;font-size:.85rem;font-weight:600}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+section.done{opacity:.6}
+h1{font-size:1.5rem;margin:.3em 0}
+h2{font-size:1.25rem;margin:0 0 4px}
+h3{font-size:1.02rem;margin:1.1em 0 .4em}
+.ind{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.ind span{font-size:.78rem;font-weight:700;background:var(--chip);color:var(--mute);border-radius:6px;padding:2px 8px}
+.ind .e{background:var(--hl);color:var(--ink)}
+.eq{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.12rem;display:flex;align-items:center;flex-wrap:wrap;gap:.35em;margin:8px 0;padding:10px 12px;background:var(--chip);border-radius:8px;overflow-x:auto}
+.eq.big{border:2px solid var(--acc)}
+.fr{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .12em}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em .08em}
+.fr>span:last-child{padding:.08em .3em 0}
+.sq{display:inline-flex;align-items:stretch;vertical-align:middle}
+.sq::before{content:"√";font-size:1.5em;line-height:1;align-self:center;margin-right:-.05em}
+.sq>span{border-top:1.5px solid currentColor;padding:.1em .2em 0;display:inline-flex;align-items:center}
+.lbl{font-family:system-ui,sans-serif;font-size:.78rem;color:var(--mute);width:100%;margin-bottom:-2px}
+.key{background:var(--hl);border-radius:8px;padding:10px 12px;margin:10px 0}
+.note{border-left:4px solid var(--acc);padding:4px 10px;margin:8px 0;color:var(--mute)}
+.trap{border-left:4px solid var(--warn);padding:6px 10px;margin:8px 0}
+.nb::before{content:"📒 Anota: ";font-weight:700}
+.nb{border:1.5px dashed var(--acc2);border-radius:8px;padding:8px 10px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600}
+.tw{overflow-x:auto}
+.q{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:12px 0;background:var(--bg)}
+.q .t{font-weight:600}
+.q input[type=text]{width:9em;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font-size:1rem}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:#fff;padding:5px 12px;margin:3px 2px}
+button.o{background:transparent;color:var(--acc)}
+.opts button{display:block;width:100%;text-align:left;background:var(--card);color:var(--ink);border-color:var(--line)}
+.opts button.okk{background:var(--ok);border-color:var(--acc2)}
+.opts button.bad{background:var(--no);border-color:var(--bad)}
+.fb{margin-top:6px;font-size:.93rem}
+.fb.ok{color:var(--acc2);font-weight:600}
+.fb.no{color:var(--bad)}
+details{margin:6px 0}
+summary{cursor:pointer;color:var(--acc);font-weight:600;font-size:.92rem}
+.lab{border:2px solid var(--acc2);border-radius:12px;padding:12px;margin:12px 0}
+.lab h3{margin-top:0}
+.lab input[type=range]{width:100%}
+.lab .out{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:8px}
+.lab .out div{background:var(--chip);border-radius:8px;padding:6px 8px;font-size:.88rem}
+.lab .out b{display:block;font-size:1.05rem}
+svg{width:100%;height:auto;display:block}
+svg text{font:11px system-ui,sans-serif;fill:var(--mute)}
+.donebtn{margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}header b{display:none}}
+body.ess .opt{display:none}
+</style>
+</head>
+<body>
+<header>
+<b>📦 Inventarios desde cero</b><span class="sp"></span>
+<label><input type="checkbox" id="essOnly"> Solo lo esencial ⭐</label>
+<span id="pend"></span>
+</header>
+<main>
+<h1>📦 EOQ, EPQ e inventarios continuos — desde cero</h1>
+<p>Primero la <b>materia</b> (con mini-preguntas para chequear que entendiste), y al final un <b>mini-control</b> con ejercicios de pruebas anteriores. Notación y ejemplos de la <b>Sesión 4</b> del profe Sperberg y de la <b>Guía Tema 4</b>.</p>
+<p class="note">Cómo leer los indicadores: 🧠 pensar · ✏️ papel · 🧮 calculadora · 👀 explorar · ⏱ minutos · ⭐ esencial. Marca "✔ Lo entendí" al terminar cada estación: el contador de arriba te dice cuántos minutos te quedan.</p>
+<nav class="toc">
+<a href="#s0">0 Mapa</a><a href="#s1">1 Costos</a><a href="#s2">2 EOQ</a><a href="#s3">3 Cuándo pedir</a><a href="#s4">4 Restricciones</a><a href="#s5">5 EPQ</a><a href="#s6">6 Descuentos</a><a href="#s7">7 Varios productos</a><a href="#s8">8 Mini-control</a><a href="#s9">9 Formulario</a>
+</nav>
+
+<!-- ===================== 0 ===================== -->
+<section id="s0" data-min="3" data-ess="1">
+<h2>0 · 🗺️ El mapa en 1 minuto</h2>
+<div class="ind"><span>👀 leer</span><span>⏱ 3 min</span><span class="e">⭐ esencial</span></div>
+<p>Un <b>inventario</b> es lo que ya compraste o produjiste y todavía no usas ni vendes. Aunque sepas exactamente cuánto vas a vender, conviene tener inventario porque <b>pedir o producir en lotes</b> ahorra costos fijos (transporte, preparar máquinas).</p>
+<p>Todo este tema responde <b>dos preguntas</b>:</p>
+<div class="grid2">
+<div class="key"><b>¿CUÁNTO pido?</b> → el tamaño de lote <b>Q</b>.<br>EOQ (compro), EPQ (produzco), con descuentos, con restricciones, varios productos.</div>
+<div class="key"><b>¿CUÁNDO pido?</b> → el punto de reorden <b>R</b>.<br>"Cuando me queden R unidades, pido Q". Eso es la política <b>(Q, R)</b> de revisión continua.</div>
+</div>
+<div class="key"><b>🧭 ¿De qué tipo de inventario es todo esto?</b><br>
+• <b>Determinístico</b> = sabes exactamente cuánto vas a vender (demanda conocida y constante), sin sorpresas. <b>Todo lo que hay en esta clase es determinístico</b>: es el tema "Inventario Determinista" (Sesión 4) y la guía "Inventarios con demanda continua" (la demanda "fluye" constante, de ahí lo de continua).<br>
+• <b>Estocástico</b> = la demanda es incierta y hay que cubrirse con stock de seguridad o nivel de servicio. <b>No aparece en tus láminas ni guías</b>, así que aquí no está. Si el profe lo pasó en clases, confírmalo con un compañero.<br>
+• <b>"Revisión continua"</b> = miras el inventario todo el tiempo y pides cuando llegas a R. Esa es la política (Q, R) de la estación 3, pero con demanda conocida (por eso R = d·L, sin stock de seguridad).<br>
+<small>Mapa: EOQ (est. 2) · cuándo pedir R (3) · restricciones (4) · EPQ (5) · descuentos (6) · varios productos (7): todos determinísticos.</small></div>
+<h3>Notación (la de las láminas)</h3>
+<div class="tw"><table>
+<tr><th>Símbolo</th><th>Qué es</th><th>Unidad típica</th></tr>
+<tr><td><b>d</b> <small>(en la guía: λ)</small></td><td>Demanda (tasa constante)</td><td>unid/año</td></tr>
+<tr><td><b>K</b></td><td>Costo fijo por pedido o por preparación (setup)</td><td>$/pedido</td></tr>
+<tr><td><b>c</b> <small>(guía: a)</small></td><td>Precio o costo unitario</td><td>$/unid</td></tr>
+<tr><td><b>h</b></td><td>Costo de mantener 1 unidad durante 1 año. Si te dan una tasa: <b>h = i · c</b></td><td>$/(unid·año)</td></tr>
+<tr><td><b>Q</b></td><td>Tamaño del lote (la decisión)</td><td>unid</td></tr>
+<tr><td><b>T</b></td><td>Duración de un ciclo = Q/d</td><td>años o días</td></tr>
+<tr><td><b>L</b></td><td>Plazo de entrega (lead time) del proveedor</td><td>días</td></tr>
+<tr><td><b>R</b></td><td>Punto de reorden</td><td>unid</td></tr>
+<tr><td><b>P</b></td><td>Tasa de producción (solo EPQ)</td><td>unid/año o unid/día</td></tr>
+</table></div>
+<div class="trap">⚠️ Regla de oro: <b>todo en la misma unidad de tiempo</b>. Los costos van en $/año; si L está en días, pasa d a unidades por día.</div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 1 ===================== -->
+<section id="s1" data-min="6" data-ess="1">
+<h2>1 · 💸 Los costos que importan</h2>
+<div class="ind"><span>🧠 pensar</span><span>⏱ 6 min</span><span class="e">⭐ esencial</span></div>
+<p>Un costo es <b>relevante</b> solo si <b>cambia cuando cambias Q</b>. Hay tres:</p>
+<div class="tw"><table>
+<tr><th>Costo</th><th>Qué pasa al subir Q</th><th>Costo anual</th></tr>
+<tr><td><b>Pedir / preparar</b> (K)</td><td>Pides menos veces → <b>baja</b></td><td>K · <span class="fr"><span>d</span><span>Q</span></span> &nbsp;(d/Q = pedidos por año)</td></tr>
+<tr><td><b>Mantener</b> (h)</td><td>Guardas más en promedio → <b>sube</b></td><td>h · <span class="fr"><span>Q</span><span>2</span></span> &nbsp;(Q/2 = inventario promedio)</td></tr>
+<tr><td><b>Comprar</b> (c)</td><td>Compras lo mismo al año (d unidades) → <b>no cambia</b>… salvo que haya descuentos</td><td>c · d</td></tr>
+</table></div>
+<p><b>h</b> incluye: costo de oportunidad del capital, bodega, seguros, mermas y obsolescencia. Si te dan "tasa anual de 20%" y el producto cuesta $2.000 → h = 0,20 · 2.000 = <b>$400 por unidad al año</b>.</p>
+<div class="nb">Para clasificar un costo, pregunta <b>cómo se genera</b>: por <b>pedido</b> → va en K · por <b>unidad que pasa</b> por el sistema → constante (no importa) · por <b>unidad guardada por año</b> → va en h.</div>
+<div class="q" data-type="mc"><div class="t">🧠 La bodega cobra <b>$100 por cada unidad que recibe</b>. ¿Dónde va ese costo?</div>
+<div class="opts">
+<button data-fb="No: K es un monto fijo por pedido, sin importar su tamaño. Este cobro depende de cuántas unidades entran.">En K (costo por pedido)</button>
+<button data-ok data-fb="¡Exacto! Al año recibes d unidades sí o sí, así que cuesta 100·d sin importar Q. Es constante y no afecta la decisión.">Es constante: no afecta a Q</button>
+<button data-fb="No: h es por unidad guardada durante un año. Aquí se cobra una vez al recibir, no por tiempo almacenado.">En h (costo de mantener)</button>
+</div><div class="fb"></div></div>
+<div class="q" data-type="mc"><div class="t">🧠 El camión cobra <b>$5.000 por viaje</b>, lleve 100 o 200 unidades. ¿Dónde va?</div>
+<div class="opts">
+<button data-ok data-fb="¡Bien! Es un cargo fijo por pedido: forma parte de K.">En K</button>
+<button data-fb="No cambia con las unidades, cambia con la cantidad de viajes (pedidos). Eso es K.">En h</button>
+<button data-fb="Si pides lotes más grandes haces menos viajes, así que sí depende de Q. Va en K.">Es constante</button>
+</div><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 2 ===================== -->
+<section id="s2" data-min="14" data-ess="1">
+<h2>2 · 📦 EOQ: cuánto pedir</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 14 min</span><span class="e">⭐ esencial</span></div>
+<h3>Supuestos del modelo básico</h3>
+<p>Demanda <b>conocida y constante</b> · el pedido llega <b>completo de una vez</b> · <b>sin faltantes</b> · K, h y c constantes.</p>
+<h3>Cómo se ve el inventario: "diente de sierra"</h3>
+<svg viewBox="0 0 420 130" aria-label="Diente de sierra">
+<line x1="30" y1="110" x2="410" y2="110" stroke="currentColor" opacity=".4"/><line x1="30" y1="10" x2="30" y2="110" stroke="currentColor" opacity=".4"/>
+<polyline points="30,20 130,110 130,20 230,110 230,20 330,110 330,20 410,92" fill="none" stroke="var(--acc)" stroke-width="2.5"/>
+<line x1="30" y1="65" x2="410" y2="65" stroke="var(--acc2)" stroke-dasharray="5 4"/>
+<text x="6" y="24">Q</text><text x="4" y="69">Q/2</text><text x="72" y="124">T = Q/d</text><text x="340" y="60" style="fill:var(--acc2)">promedio</text>
+</svg>
+<p>Llega Q, baja en línea recta (a tasa d) hasta 0, y justo ahí llega el siguiente pedido. Por eso el inventario <b>promedio es Q/2</b> (el área del triángulo dividida por su base).</p>
+<h3>La función de costo</h3>
+<div class="eq big"><span class="lbl">Costo anual relevante</span>C(Q) = K · <span class="fr"><span>d</span><span>Q</span></span> + h · <span class="fr"><span>Q</span><span>2</span></span></div>
+<p>Derivas, igualas a cero (−Kd/Q² + h/2 = 0) y despejas:</p>
+<div class="eq big"><span class="lbl">Lote económico de pedido</span>Q* = <span class="sq"><span><span class="fr"><span>2 K d</span><span>h</span></span></span></span></div>
+<div class="grid2">
+<div class="eq"><span class="lbl">Ciclo</span>T* = <span class="fr"><span>Q*</span><span>d</span></span></div>
+<div class="eq"><span class="lbl">Pedidos por año</span>N = <span class="fr"><span>d</span><span>Q*</span></span></div>
+</div>
+<div class="key">💡 <b>Propiedad clave:</b> cuando usas Q*, lo que gastas al año en <b>pedir</b> es exactamente igual a lo que gastas en <b>mantener</b>. Son dos mitades iguales del costo total.
+<div class="eq"><span class="lbl">En el óptimo</span>K · <span class="fr"><span>d</span><span>Q*</span></span> &nbsp;=&nbsp; h · <span class="fr"><span>Q*</span><span>2</span></span></div>
+<div class="eq"><span class="lbl">Entonces el costo mínimo es el doble de una mitad</span>C(Q*) = 2 · h · <span class="fr"><span>Q*</span><span>2</span></span> = h · Q*</div>
+<div class="eq"><span class="lbl">Reemplazando Q* y simplificando (atajo para calcular rápido)</span>C(Q*) = <span class="sq"><span>2 · K · d · h</span></span></div>
+<small>Con el ejemplo de abajo: pedir $38.730 = mantener $38.730 → total $77.460 = √(2·5.000·1.200·500).</small></div>
+<h3>Ejemplo de la lámina</h3>
+<p>d = 1.200 unid/año (4 por día, 300 días), K = $5.000, h = $500:</p>
+<div class="eq">Q* = <span class="sq"><span><span class="fr"><span>2 · 5.000 · 1.200</span><span>500</span></span></span></span> = 154,92 ≈ 155 &nbsp;·&nbsp; T = 155/4 = 38,75 días &nbsp;·&nbsp; C* = 38.730 + 38.730 = $77.460</div>
+
+<div class="lab" id="labEOQ"><h3>👀 Laboratorio: mueve Q y mira los costos</h3>
+<svg id="eoqSvg" viewBox="0 0 420 220"></svg>
+<input type="range" id="eoqQ" min="40" max="400" value="155">
+<div class="out" id="eoqOut"></div>
+<p class="note">Fíjate: la curva es <b>plana cerca del óptimo</b>. Pedir 120 o 200 en vez de 155 cuesta solo un par de % más.</p>
+</div>
+
+<div class="q" data-ans="1909.41" data-tol="2" data-errs="1207.6:Usaste h = 3000 (el precio). h = tasa · precio = 0,4 · 3.000 = 1.200.|1350.2:Te faltó el 2 dentro de la raíz.">
+<div class="t">🧮 Carnicería (examen 2019): vende 12.500 kg de pulpa al año, cada pedido cuesta $175.000 y el kilo cuesta $3.000, con tasa de mantención de 40% anual. ¿Cuántos kg por pedido (EOQ)?</div>
+<input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>h = 0,4 · 3.000 = 1.200. Luego Q* = √(2·175.000·12.500 / 1.200).</details>
+<div class="fb"></div></div>
+<div class="q" data-ans="6.55" data-tol="0.05"><div class="t">🧮 ¿Y cuántos pedidos al año hará? (N = d/Q*)</div>
+<input type="text"> <button>Revisar</button><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 3 ===================== -->
+<section id="s3" data-min="12" data-ess="1">
+<h2>3 · ⏰ Cuándo pedir: el punto de reorden R</h2>
+<div class="ind"><span>🧠 + ✏️</span><span>⏱ 12 min</span><span class="e">⭐ esencial</span></div>
+<p>El proveedor demora <b>L</b> en entregar. Hay que pedir <b>antes</b> de quedarse en cero: cuando el inventario alcance justo lo que se va a consumir mientras esperas.</p>
+<p class="note">No confundas: <b>T</b> (ciclo) depende de Q y d; <b>L</b> (plazo) depende del proveedor. Son tiempos distintos.</p>
+<h3>Caso 1 · El plazo es menor que el ciclo (L ≤ T)</h3>
+<div class="eq big">R = d · L</div>
+<p>Ejemplo: d = 4/día y L = 10 días → <b>R = 40</b>. "Cuando queden 40, pido 155." Como T = 38,75 días, emito el pedido el día 28,75 y llega el día 38,75, justo cuando se acaba.</p>
+<h3>Caso 2 · El plazo es mayor que el ciclo (L &gt; T)</h3>
+<p>Ahora d·L supera a Q: vas a tener <b>varios pedidos en camino a la vez</b>. Primero define la <b>posición de inventario</b>:</p>
+<div class="eq">Posición = inventario disponible + pedidos pendientes − demanda pendiente</div>
+<div class="grid2">
+<div class="eq"><span class="lbl">Sobre la posición de inventario</span>R<sub>posición</sub> = d · L</div>
+<div class="eq"><span class="lbl">Sobre lo que tienes físicamente</span>R<sub>físico</sub> = d · (L − n · T), &nbsp; n = ⌊L / T⌋</div>
+</div>
+<p>n = número de ciclos completos dentro de L (redondeando hacia abajo) = pedidos que ya vienen en camino.</p>
+<p><b>Ejemplo de la lámina:</b> L = 100 días, T = 38,75 → n = ⌊100/38,75⌋ = 2. L − 2T = 100 − 77,5 = 22,5 días → <b>R<sub>físico</sub> = 4 · 22,5 = 90</b>. Sobre la posición: R = 4·100 = 400 = 90 disponibles + 2·155 en camino. Es el mismo instante, medido de dos formas.</p>
+<div class="lab" id="labR"><h3>👀 Laboratorio: cambia el plazo L</h3>
+<svg id="rSvg" viewBox="0 0 420 150"></svg>
+<input type="range" id="rL" min="2" max="130" value="10">
+<div class="out" id="rOut"></div>
+<p class="note">▼ = momento en que se emite un pedido. La línea punteada es R. Con L &gt; T verás pedidos que se emiten antes de que llegue el anterior.</p>
+</div>
+<div class="q" data-ans="85" data-tol="0.5" data-errs="240:Eso es d·L sobre la posición. Pide el inventario físico: resta los ciclos completos (n = 1).|155:Ese es Q, no R."><div class="t">✏️ d = 4/día, Q = 155 (T = 38,75 días) y L = 60 días. ¿Con cuántas unidades <b>físicas</b> emites el pedido?</div>
+<input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>n = ⌊60/38,75⌋ = 1. Luego R = 4 · (60 − 38,75).</details><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 4 ===================== -->
+<section id="s4" data-min="10" data-ess="1">
+<h2>4 · 🔧 Sensibilidad y restricciones</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 10 min</span><span class="e">⭐ esencial</span></div>
+<h3>Qué pasa si cambian los datos</h3>
+<ul>
+<li><b>Demanda × 2</b> → Q* × √2 ≈ 1,41. El lote crece, pero <b>menos</b> que la demanda, así que pides más seguido.</li>
+<li><b>Baja K</b> (preparaciones más baratas) → lotes más chicos. Esa es la idea detrás de reducir setups.</li>
+<li><b>Sube el precio c</b> → si h = i·c, sube h → Q* <b>baja</b>.</li>
+</ul>
+<h3>¿Cuánto cuesta no usar Q*? (sobrecosto)</h3>
+<div class="eq big"><span class="fr"><span>C(Q)</span><span>C(Q*)</span></span> = <span class="fr"><span>1</span><span>2</span></span> · ( <span class="fr"><span>Q</span><span>Q*</span></span> + <span class="fr"><span>Q*</span><span>Q</span></span> )</div>
+<h3>Restricciones: siempre los mismos 4 pasos</h3>
+<div class="nb">① Calcula el EOQ sin restricciones → ② ¿es factible? → ③ si no, toma la <b>mejor cantidad permitida</b> (la más cercana a Q*) → ④ calcula el nuevo ciclo y el sobrecosto.</div>
+<div class="tw"><table>
+<tr><th>Restricción</th><th>Condición</th><th>Solución</th></tr>
+<tr><td>Bodega: máximo B unidades</td><td>Q ≤ B</td><td>Q = mín(Q*, B)</td></tr>
+<tr><td>Vida útil: vence en V días</td><td>T = Q/d ≤ V → Q ≤ d·V</td><td>Q = mín(Q*, d·V)</td></tr>
+<tr><td>Pedido mínimo M</td><td>Q ≥ M</td><td>Q = máx(Q*, M)</td></tr>
+<tr><td>Enteros o múltiplos</td><td>Q ∈ {…, 150, 180, …}</td><td>Compara el costo de los dos vecinos factibles</td></tr>
+<tr><td>Frecuencia fija (ej. 1 vez al mes)</td><td>Q = d · T<sub>fijo</sub></td><td>Calcula C(Q) y compáralo con C*</td></tr>
+</table></div>
+<p><b>Ejemplo de la lámina:</b> Q* = 154,92, bodega para 120 → Q = 120. C(120) = 5.000·1.200/120 + 500·60 = $80.000 vs C* = $77.460 → sobrecosto <b>3,28%</b>. Múltiplos de 30: C(150) = 77.500 &lt; C(180) = 78.333 → pides 150.</p>
+<div class="trap">⚠️ Si el mínimo exigido es mayor que el máximo permitido (por ejemplo, mínimo 200 pero vence antes de consumir 120), el problema es <b>infactible</b>: hay que cambiar las condiciones.</div>
+<div class="q" data-ans="3.28" data-tol="0.05" data-pct="1"><div class="t">🧮 Usa la fórmula de sobrecosto con Q = 120 y Q* = 154,92. ¿Qué % más caro sale?</div>
+<input type="text"> % <button>Revisar</button>
+<details><summary>💡 Pista</summary>½ · (120/154,92 + 154,92/120) = 1,0328.</details><div class="fb"></div></div>
+<div class="q" data-type="mc"><div class="t">🧠 La demanda se cuadruplica. ¿Qué le pasa a Q*?</div>
+<div class="opts">
+<button data-fb="No: Q* depende de la raíz de d.">Se cuadruplica</button>
+<button data-ok data-fb="¡Sí! √4 = 2. Pides el doble por pedido, pero el doble de veces al año.">Se duplica</button>
+<button data-fb="No cambia K ni h, pero d está dentro de la raíz.">No cambia</button>
+</div><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 5 ===================== -->
+<section id="s5" data-min="15" data-ess="1">
+<h2>5 · 🏭 EPQ: cuando tú produces el lote</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 15 min</span><span class="e">⭐ esencial</span></div>
+<p>En el EOQ el lote llega <b>de golpe</b>. En el EPQ lo <b>produces tú</b> a una tasa <b>P</b>, así que las unidades van entrando de a poco <b>mientras</b> sigues vendiendo a tasa d. Se necesita <b>P &gt; d</b> (si no, nunca acumulas inventario). K ahora es el costo de preparar la máquina (setup).</p>
+<h3>Las dos fases del ciclo</h3>
+<svg viewBox="0 0 420 140" aria-label="Ciclo EPQ">
+<line x1="30" y1="118" x2="410" y2="118" stroke="currentColor" opacity=".4"/><line x1="30" y1="10" x2="30" y2="118" stroke="currentColor" opacity=".4"/>
+<polyline points="30,118 110,30 230,118 310,30 410,103" fill="none" stroke="var(--acc)" stroke-width="2.5"/>
+<line x1="110" y1="30" x2="110" y2="118" stroke="currentColor" opacity=".3" stroke-dasharray="3 3"/>
+<text x="6" y="34">H</text><text x="44" y="60" style="fill:var(--acc2)">sube a P − d</text><text x="150" y="60" style="fill:var(--warn)">baja a d</text>
+<text x="50" y="132">produzco (Tp)</text><text x="140" y="132">solo consumo</text><text x="250" y="132">ciclo T = Q/d</text>
+</svg>
+<div class="grid2">
+<div class="eq"><span class="lbl">Tiempo produciendo</span>T<sub>p</sub> = <span class="fr"><span>Q</span><span>P</span></span></div>
+<div class="eq"><span class="lbl">Inventario máximo</span>H = (P − d)·T<sub>p</sub> = Q·(1 − <span class="fr"><span>d</span><span>P</span></span>)</div>
+<div class="eq"><span class="lbl">Ciclo</span>T = <span class="fr"><span>Q</span><span>d</span></span></div>
+<div class="eq"><span class="lbl">Inventario promedio</span><span class="fr"><span>H</span><span>2</span></span> = <span class="fr"><span>Q</span><span>2</span></span>(1 − <span class="fr"><span>d</span><span>P</span></span>)</div>
+</div>
+<p>¿Por qué H &lt; Q? Porque mientras produces Q también vendes, así que nunca llegas a tener las Q juntas.</p>
+<div class="eq big"><span class="lbl">Costo anual</span>C(Q) = K · <span class="fr"><span>d</span><span>Q</span></span> + h · <span class="fr"><span>Q</span><span>2</span></span>(1 − <span class="fr"><span>d</span><span>P</span></span>)</div>
+<div class="eq big"><span class="lbl">Lote económico de producción</span>Q* = <span class="sq"><span><span class="fr"><span>2 K d</span><span>h (1 − d/P)</span></span></span></span></div>
+<div class="nb">EPQ = EOQ con h "rebajado" a h·(1 − d/P). Como (1 − d/P) &lt; 1, el <b>EPQ siempre es mayor que el EOQ</b>. Si P → ∞ (producción instantánea), vuelves al EOQ. d y P solo tienen que estar en la <b>misma unidad</b> (ambos diarios o ambos anuales).</div>
+<p><b>Ejemplo de la lámina:</b> mismos datos y P = 20/día (d = 4/día) → 1 − 4/20 = 0,8 → Q* = 154,92/√0,8 = <b>173,21</b>. Tp = 173,21/20 = 8,66 días · H = 173,21·0,8 = 138,56 · T = 173,21/4 = 43,3 días. De nuevo, en el óptimo costo de preparación = costo de mantener.</p>
+<div class="lab" id="labEPQ"><h3>👀 Laboratorio: cambia la tasa de producción P</h3>
+<svg id="epqSvg" viewBox="0 0 420 150"></svg>
+<input type="range" id="epqP" min="5" max="80" value="20">
+<div class="out" id="epqOut"></div>
+</div>
+<h3>Si cada corrida además demora en prepararse o limpiarse</h3>
+<p>Fracción del año produciendo = <b>d/P</b>. Días ocupados al año = 365·d/P + N · t<sub>prep</sub>, con N = d/Q corridas por año. Lo que sobra queda libre para otros productos.</p>
+<div class="q" data-ans="3343.4" data-tol="3" data-errs="2527.3:Ese es el EOQ: te faltó dividir por (1 − d/P).|1831:Usaste h = 28 (el costo). h = 0,30 · 28 = 8,4."><div class="t">🧮 Queso azul (examen 2020): d = 210 kg/día, P = 490 kg/día, aseo de $350 por lote, costo $28/kg, costo de capital 30% anual, 365 días. ¿Lote óptimo?</div>
+<input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>d anual = 210·365 = 76.650. h = 0,3·28 = 8,4. 1 − d/P = 1 − 210/490 = 0,5714. El mantenimiento anual de $410.000 de la planta es fijo: no entra.</details><div class="fb"></div></div>
+<div class="q" data-ans="116.9" data-tol="0.3"><div class="t">🧮 Si cada lote necesita 4 días de limpieza, ¿cuántos días al año quedan libres para otros quesos?</div>
+<input type="text"> días <button>Revisar</button>
+<details><summary>💡 Pista</summary>Producción: 365·210/490 = 156,4 días. Corridas: 76.650/3.343,4 = 22,9 → limpieza = 4·22,9 = 91,7 días. Libres = 365 − 156,4 − 91,7.</details><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 6 ===================== -->
+<section id="s6" data-min="12" data-ess="1">
+<h2>6 · 🏷️ Descuentos por cantidad</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 12 min</span><span class="e">⭐ esencial</span></div>
+<p>Si el precio depende de Q, el costo de compra c·d <b>vuelve a importar</b>. Se suman los tres costos:</p>
+<div class="eq big"><span class="lbl">Costo anual en el tramo j (precio c<sub>j</sub>)</span>C<sub>j</sub>(Q) = c<sub>j</sub>·d + K·<span class="fr"><span>d</span><span>Q</span></span> + i·c<sub>j</sub>·<span class="fr"><span>Q</span><span>2</span></span></div>
+<p class="note">Si te dan una tasa i, h cambia con el precio (h = i·c<sub>j</sub>). Si te dan un h fijo, usa el mismo h en todos los tramos.</p>
+<h3>Dos tipos (ejemplo: descuento desde 200 y pides 250)</h3>
+<div class="grid2">
+<div class="key"><b>Todas las unidades</b>: las 250 pagan el precio rebajado. ⭐ El más común.</div>
+<div class="key"><b>Incremental</b>: las primeras 200 pagan el precio normal y solo las 50 siguientes el rebajado.</div>
+</div>
+<h3>Procedimiento (todas las unidades)</h3>
+<div class="nb">Para cada tramo: ① calcula su EOQ con su precio → ② ¿cae dentro del tramo? Si cae <b>debajo</b> del límite inferior, evalúa ese <b>límite</b>; si cae <b>encima</b>, descártalo → ③ compara el costo total C(Q) <b>con precio incluido</b> de todos los candidatos y quédate con el menor.</div>
+<p><b>Ejemplo de la lámina</b> (d = 1.200, K = 5.000, i = 10%):</p>
+<div class="tw"><table>
+<tr><th>Tramo</th><th>Precio</th><th>EOQ del tramo</th><th>Candidato</th><th>Costo total anual</th></tr>
+<tr><td>Q &lt; 200</td><td>5.000</td><td>154,9 ✓ válido</td><td>154,9</td><td>6.000.000 + 77.460 = 6.077.460</td></tr>
+<tr><td>200–399</td><td>4.900</td><td>156,5 ✗ debajo</td><td>200</td><td>5.880.000 + 30.000 + 49.000 = <b>5.959.000</b> ✅</td></tr>
+<tr><td>≥ 400</td><td>4.880</td><td>156,8 ✗ debajo</td><td>400</td><td>5.856.000 + 15.000 + 97.600 = 5.968.600</td></tr>
+</table></div>
+<p>De 200 a 400 ahorras $24.000 en compra y $15.000 en pedidos, pero pagas $48.600 más en mantención. Neto: +$9.600 → conviene <b>200</b>. <b>El precio más bajo no siempre es el mejor.</b></p>
+<div class="q" data-type="mc"><div class="t">🧠 Calculas el EOQ del tramo "≥ 400" y te da 157. ¿Qué haces con ese tramo?</div>
+<div class="opts">
+<button data-fb="No: con 157 unidades no tienes derecho al precio de ese tramo.">Pido 157 al precio rebajado</button>
+<button data-ok data-fb="¡Correcto! El EOQ quedó debajo del límite inferior, así que el mejor punto de ese tramo es justo el umbral: 400.">Evalúo Q = 400 (el umbral)</button>
+<button data-fb="Se descarta solo si queda ENCIMA del tramo. Si queda debajo, evalúas el límite inferior.">Descarto el tramo</button>
+</div><div class="fb"></div></div>
+
+<div class="opt">
+<h3>🔥 Opcional: descuento incremental</h3>
+<div class="ind"><span>🧠</span><span>⏱ +5 min</span><span>opcional</span></div>
+<p>Primero calcula lo que cuesta un pedido completo, <b>C(Q)</b>. Si el tramo j parte en q<sub>j</sub> con precio c<sub>j</sub>, y R<sub>j</sub> es lo que cuestan las primeras q<sub>j</sub> unidades a los precios anteriores:</p>
+<div class="eq">C(Q) = R<sub>j</sub> + c<sub>j</sub>·(Q − q<sub>j</sub>) &nbsp; → &nbsp; precio promedio = C(Q)/Q</div>
+<div class="eq">Costo anual = d·<span class="fr"><span>C(Q)</span><span>Q</span></span> + K·<span class="fr"><span>d</span><span>Q</span></span> + i·<span class="fr"><span>C(Q)</span><span>2</span></span> &nbsp; → &nbsp; Q<sub>j</sub>* = <span class="sq"><span><span class="fr"><span>2d·(K + R<sub>j</sub> − c<sub>j</sub>q<sub>j</sub>)</span><span>i·c<sub>j</sub></span></span></span></span></div>
+<p>Solo valen los Q<sub>j</sub>* que caen dentro de su tramo (aquí el óptimo nunca está en un umbral). Compara sus costos. El inventario se valora al <b>precio promedio</b>, no al del último tramo.</p>
+</div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 7 ===================== -->
+<section id="s7" data-min="15" data-ess="1">
+<h2>7 · 🧺 Varios productos</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 15 min</span><span class="e">⭐ esencial (7A y 7B)</span></div>
+<p>Si los productos no comparten nada, cada uno tiene su propio EOQ. Se vinculan cuando comparten un <b>recurso</b> (presupuesto, espacio, tiempo de máquina) o un <b>costo de pedido</b>.</p>
+
+<h3>7A · Recurso compartido (presupuesto o bodega)</h3>
+<p>Restricción típica (todos los lotes completos al mismo tiempo): Σ c<sub>j</sub>·Q<sub>j</sub> ≤ B (presupuesto) o Σ e<sub>j</sub>·Q<sub>j</sub> ≤ E (espacio por unidad).</p>
+<div class="nb">① Calcula cada EOQ por separado → ② evalúa el recurso que usan → ③ si cabe, <b>listo</b> (esos EOQ son la solución) → ④ si no cabe, achica los lotes.</div>
+<p><b>Caso especial ⭐ (presupuesto y misma tasa i para todos):</b> todos se achican en la misma proporción.</p>
+<div class="eq big">Q<sub>j</sub> = Q<sub>j</sub>* · <span class="fr"><span>B</span><span>Σ c<sub>j</sub> Q<sub>j</sub>*</span></span></div>
+<div class="opt">
+<p><b>🔥 Caso general (Lagrange):</b> cuando cada producto usa el recurso distinto (ej. bodega con productos de distinto tamaño).</p>
+<div class="key"><b>¿Qué son w<sub>j</sub> y θ?</b><br>
+• <b>w<sub>j</sub></b> = cuánto del recurso usa <b>1 unidad</b> del producto j. No es "cuántos motores": es el tamaño. Ej.: bodega → m² por unidad; presupuesto → el precio c<sub>j</sub> (cada unidad "gasta" c<sub>j</sub> pesos).<br>
+• <b>θ</b> (el multiplicador) = el <b>precio sombra del recurso</b>: cuántos $ por año te ahorrarías si tuvieras <b>1 unidad más</b> de recurso (1 m² más, $1 más de presupuesto). No es una cantidad de productos; sus unidades son $/año por unidad de recurso.<br>
+• <b>Cómo actúa:</b> es una "multa" que sube el costo de mantener: <b>h<sub>j</sub> + 2θw<sub>j</sub></b>. Un producto que ocupa más recurso (w grande) se "encarece" más, y por eso achicas más su lote. Si el recurso sobra, θ = 0 y vuelves al EOQ normal.<br>
+• θ <b>se busca por tanteo</b>: sube θ hasta que Σ w<sub>j</sub>Q<sub>j</sub> = recurso disponible. θ más grande = lotes más chicos.</div>
+<p><b>Ejemplo con números (ejercicio ③ del mini-control, presupuesto $10.000):</b> aquí w<sub>j</sub> = c<sub>j</sub> y h<sub>j</sub> = 0,3·c<sub>j</sub>. Para que todo quepa hay que usar θ ≈ <b>0,143</b>. Significa: si te dieran $1 más de presupuesto, ahorrarías unos <b>$0,14 al año</b>. Con ese θ, Q<sub>A</sub> = √(2·50·1.000 / (15 + 2·0,143·50)) = 58,5. Es la misma respuesta que da la reducción proporcional (porque ahí todos tienen la misma tasa).</p>
+<p>La fórmula completa, con θ ≥ 0 y w<sub>j</sub> = recurso por unidad:</p>
+<div class="eq">Q<sub>j</sub>(θ) = <span class="sq"><span><span class="fr"><span>2 K<sub>j</sub> d<sub>j</sub></span><span>h<sub>j</sub> + 2θ w<sub>j</sub></span></span></span></span></div>
+<p>Busca el θ &gt; 0 que hace que la restricción se cumpla con igualdad (prueba valores o resuelve). Si la restricción no está activa, θ = 0 y vuelves a los EOQ. </p>
+<h3 style="margin-top:.8em">🏭 Lagrange para EPQ (guía, ejercicio 10: varios productos en una misma máquina)</h3>
+<p>Recurso compartido = <b>días de máquina al año (L)</b>. Cada producto j gasta tiempo en <b>producir</b> (d<sub>j</sub>/P<sub>j</sub> días) y en <b>preparar</b> (t<sub>j</sub> días por corrida, y hay d<sub>j</sub>/Q<sub>j</sub> corridas).</p>
+<div class="eq big"><span class="lbl">Problema</span>mín Σ<sub>j</sub> [ K<sub>j</sub>·<span class="fr"><span>d<sub>j</sub></span><span>Q<sub>j</sub></span></span> + h<sub>j</sub>·<span class="fr"><span>Q<sub>j</sub></span><span>2</span></span>·(1 − <span class="fr"><span>d<sub>j</sub></span><span>P<sub>j</sub></span></span>) ]</div>
+<div class="eq"><span class="lbl">sujeto a (tiempo de máquina)</span>Σ<sub>j</sub> [ <span class="fr"><span>d<sub>j</sub></span><span>Q<sub>j</sub></span></span>·t<sub>j</sub> + <span class="fr"><span>d<sub>j</sub></span><span>P<sub>j</sub></span></span> ] ≤ L</div>
+<div class="eq"><span class="lbl">Derivas respecto a Q<sub>j</sub> e igualas a 0, y queda:</span>Q<sub>j</sub> = <span class="sq"><span><span class="fr"><span>2 d<sub>j</sub> · (K<sub>j</sub> + θ t<sub>j</sub>)</span><span>h<sub>j</sub> · (1 − d<sub>j</sub>/P<sub>j</sub>)</span></span></span></span></div>
+<div class="key"><b>Cómo leerlo:</b> θ = $ que vale 1 día de máquina. K<sub>j</sub> + θ·t<sub>j</sub> = costo de preparar <b>más</b> el valor del tiempo de máquina que pierdes preparando. Si la máquina te sobra, θ = 0 y es el EPQ normal; si falta, θ &gt; 0, preparar sale más caro y haces <b>lotes más grandes</b> (menos preparaciones).<br><small>Ojo: d y P en la misma unidad dentro de (1 − d/P); pero en la restricción d/P debe dar días (d anual ÷ P diaria).</small></div>
+</div>
+<p><b>Ejemplo (guía, ejercicio 1):</b> A, B y C con EOQ de 81,65 · 129,10 · 91,29. Capital = 81,65·50 + 129,10·20 + 91,29·80 = $13.967 ≤ $15.000 → la restricción <b>no influye</b>.</p>
+
+<h3>7B · Pedido conjunto (un solo K para todo el pedido)</h3>
+<p>Si pedir A, B o ambos juntos cuesta el mismo K, conviene pedirlos <b>a la vez</b>, con el mismo número de pedidos N por año (Q<sub>j</sub> = d<sub>j</sub>/N):</p>
+<div class="eq big"><span class="lbl">Costo anual conjunto</span>C(N) = K·N + Σ <span class="fr"><span>h<sub>j</sub> d<sub>j</sub></span><span>2N</span></span> &nbsp;→&nbsp; N* = <span class="sq"><span><span class="fr"><span>Σ h<sub>j</sub> d<sub>j</sub></span><span>2K</span></span></span></span></div>
+<p>Compara contra la suma de los costos por separado (cada uno con su EOQ: <span class="sq"><span>2 K d<sub>j</sub> h<sub>j</sub></span></span>).</p>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 8 ===================== -->
+<section id="s8" data-min="30" data-ess="1">
+<h2>8 · 📝 Mini-control (pruebas anteriores)</h2>
+<div class="ind"><span>✏️ + 🧮</span><span>⏱ 30 min</span><span class="e">⭐ esencial</span></div>
+<p>Hazlos en papel con calculadora y escribe tu resultado. Si fallas, la retroalimentación te dice el error típico.</p>
+
+<h3>① Macrochemex (EPQ, examen 2020)</h3>
+<p>Producen máximo 3.000 L/día, la demanda es 110.000 L/año, cada corrida cuesta $12.000, el litro cuesta $20 y la tasa de inventario es 35% anual. El año tiene 325 días hábiles.</p>
+<div class="q" data-ans="20618" data-tol="15" data-errs="19420:Ese es el EOQ: te faltó (1 − d/P).|20476:Usaste 365 días: el enunciado dice 325 hábiles, así que P = 3.000 · 325."><div class="t">a) Lote óptimo de producción (L)</div><input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>P anual = 3.000·325 = 975.000. h = 0,35·20 = 7. 1 − d/P = 1 − 110.000/975.000 = 0,8872.</details><div class="fb"></div></div>
+<div class="q" data-ans="5.34" data-tol="0.03"><div class="t">b) ¿Cuántas corridas al año?</div><input type="text"> <button>Revisar</button><div class="fb"></div></div>
+<div class="q" data-ans="6.87" data-tol="0.03"><div class="t">c) ¿Cuántos días dura cada corrida de producción? (Tp = Q/P, con P diario)</div><input type="text"> días <button>Revisar</button><div class="fb"></div></div>
+
+<h3>② Librería (pedido conjunto, examen 2020)</h3>
+<p>Libros infantiles: $3.500 c/u, d = 3.500/año. Cuentos: $1.200 c/u, d = 2.400/año. El pedido cuesta $10.000 (lleve uno o ambos productos) y la mantención es 35% anual del costo.</p>
+<div class="q" data-ans="434817" data-tol="50"><div class="t">a) Costo anual (pedir + mantener) si se piden por separado, cada uno con su EOQ</div><input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>h libros = 1.225, h cuentos = 420. Costo de cada uno = √(2·K·d·h). Súmalos.</details><div class="fb"></div></div>
+<div class="q" data-ans="16.27" data-tol="0.03"><div class="t">b) Pedidos por año si se piden juntos (N*)</div><input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>N* = √((1.225·3.500 + 420·2.400) / (2·10.000)).</details><div class="fb"></div></div>
+<div class="q" data-ans="325438" data-tol="60"><div class="t">c) Costo anual conjunto. ¿Conviene?</div><input type="text"> <button>Revisar</button><div class="fb"></div></div>
+
+<h3>③ Presupuesto limitado (variante de la guía, ejercicio 1)</h3>
+<p>Mismos datos (d: 1.000 / 1.000 / 2.000 · c: 50 / 20 / 80 · K = 50 · tasa 30%), pero ahora el tope es <b>$10.000</b>.</p>
+<div class="q" data-ans="58.46" data-tol="0.1" data-errs="81.65:Ese es el EOQ sin restricción, pero ya no cabe (usa $13.967)."><div class="t">¿Cuánto pedir de A? (misma tasa para todos → reducción proporcional)</div><input type="text"> <button>Revisar</button>
+<details><summary>💡 Pista</summary>Factor = 10.000 / 13.967,44 = 0,716. Q<sub>A</sub> = 81,65·0,716.</details><div class="fb"></div></div>
+
+<h3>④ Descuentos</h3>
+<div class="q" data-type="mc"><div class="t">Precio 5.000 si Q &lt; 200, 4.900 desde 200 y 4.880 desde 400 (d = 1.200, K = 5.000, i = 10%). ¿Cuánto pedir?</div>
+<div class="opts">
+<button data-fb="Ese EOQ es válido, pero paga el precio más alto: 6.077.460 al año.">155</button>
+<button data-ok data-fb="¡Eso! 5.959.000 al año, el menor costo total.">200</button>
+<button data-fb="Paga el precio más bajo, pero la mantención sube tanto que sale 5.968.600, $9.600 más que con 200.">400</button>
+</div><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<!-- ===================== 9 ===================== -->
+<section id="s9" data-min="5" data-ess="1">
+<h2>9 · 📒 Formulario para copiar al cuaderno</h2>
+<div class="ind"><span>✏️ copiar</span><span>⏱ 5 min</span><span class="e">⭐ esencial</span></div>
+<div class="tw"><table>
+<tr><th>Qué</th><th>Fórmula</th></tr>
+<tr><td>Costo EOQ</td><td>C(Q) = K·d/Q + h·Q/2 &nbsp; (h = i·c)</td></tr>
+<tr><td>EOQ</td><td>Q* = √(2Kd/h) · T = Q/d · N = d/Q · C* = √(2Kdh)</td></tr>
+<tr><td>Reorden</td><td>L ≤ T: R = d·L · L &gt; T: R<sub>físico</sub> = d·(L − n·T), n = ⌊L/T⌋ · R<sub>posición</sub> = d·L</td></tr>
+<tr><td>Sobrecosto</td><td>C(Q)/C* = ½·(Q/Q* + Q*/Q)</td></tr>
+<tr><td>Restricciones</td><td>EOQ → ¿factible? → mejor permitido → ciclo y sobrecosto</td></tr>
+<tr><td>EPQ</td><td>Q* = √(2Kd / (h(1 − d/P))) · H = Q(1 − d/P) · Tp = Q/P · promedio = H/2</td></tr>
+<tr><td>Descuentos</td><td>C<sub>j</sub>(Q) = c<sub>j</sub>d + Kd/Q + i·c<sub>j</sub>·Q/2 → EOQ por tramo, si cae debajo evalúa el umbral, compara totales</td></tr>
+<tr><td>Presupuesto (misma i)</td><td>Q<sub>j</sub> = Q<sub>j</sub>* · B / Σ c<sub>j</sub>Q<sub>j</sub>*</td></tr>
+<tr><td>Lagrange</td><td>Q<sub>j</sub> = √(2K<sub>j</sub>d<sub>j</sub> / (h<sub>j</sub> + 2θw<sub>j</sub>))</td></tr>
+<tr><td>Pedido conjunto</td><td>N* = √(Σh<sub>j</sub>d<sub>j</sub> / 2K) · Q<sub>j</sub> = d<sub>j</sub>/N · C = KN + Σh<sub>j</sub>d<sub>j</sub>/(2N)</td></tr>
+</table></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+<section id="s10" data-min="12" data-ess="1">
+<h2>10 · 🎲 PARTE 2 — Inventario estocástico: la idea</h2>
+<div class="ind"><span>🧠 pensar</span><span>⏱ 12 min</span><span class="e">⭐ esencial</span></div>
+<div class="note">⚠️ Armado por mí con teoría estándar (el profe aún no sube las láminas). Cuando las suba, revisa que su notación coincida.</div>
+<p>Hasta aquí la demanda era <b>conocida</b>. Ahora es <b>incierta</b>: sabes su promedio (μ) y cuánto varía (σ), y se asume <b>normal</b>. El problema: si pides cuando queda R = d·L, el 50% de las veces la demanda durante el plazo es mayor y <b>te quedas sin stock</b>.</p>
+<div class="key"><b>Solución:</b> pedir antes, con un colchón = <b>stock de seguridad (SS)</b>.</div>
+<h3>Demanda durante el plazo de entrega</h3>
+<div class="eq">μ<sub>L</sub> = d · L &nbsp;&nbsp; σ<sub>L</sub> = σ<sub>d</sub> · √L</div>
+<p>d y σ<sub>d</sub> en la misma unidad de tiempo que L (ej. por día y días). <b>σ crece con √L, no con L</b>, porque las variaciones se compensan entre períodos.</p>
+<div class="eq">Si el plazo también varía (media L, desv. σ<sub>Lt</sub>): &nbsp; σ<sub>L</sub> = √( L·σ<sub>d</sub>² + d²·σ<sub>Lt</sub>² )</div>
+<h3>Punto de reorden con seguridad</h3>
+<div class="eq big">SS = z · σ<sub>L</sub> &nbsp;&nbsp; R = μ<sub>L</sub> + SS</div>
+<p>z viene de la normal estándar según el nivel de servicio:</p>
+<div class="tw"><table><tr><th>Nivel de servicio</th><th>90%</th><th>95%</th><th>97,5%</th><th>99%</th></tr><tr><td>z</td><td>1,2816</td><td>1,6449</td><td>1,96</td><td>2,3263</td></tr></table></div>
+<div class="nb">Q se sigue calculando con el EOQ de siempre. Lo estocástico solo cambia <b>R</b> (cuándo pido), no Q (cuánto).</div>
+<div class="q" data-type="mc"><div class="t">🧠 Quieres subir el nivel de servicio de 90% a 99%. ¿Qué pasa con el stock de seguridad?</div><div class="opts">
+<button data-ok data-fb="¡Sí! z sube de 1,28 a 2,33, así que SS = z·σ<sub>L</sub> sube. Más servicio = más inventario guardado = más costo de mantener.">Sube</button>
+<button data-fb="SS = z·σL y z depende del nivel de servicio: si pides más servicio, z sube.">Baja</button>
+<button data-fb="Cambia: z es distinto para cada nivel de servicio.">No cambia</button></div><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<section id="s11" data-min="18" data-ess="1">
+<h2>11 · 🛡️ Política (Q, R) con demanda incierta</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 18 min</span><span class="e">⭐ esencial</span></div>
+<h3>Dos formas de medir el "nivel de servicio"</h3>
+<div class="tw"><table>
+<tr><th></th><th>Servicio por ciclo (α)</th><th>Fill rate (β)</th></tr>
+<tr><td>Qué mide</td><td>Probabilidad de <b>no tener quiebre</b> en un ciclo</td><td>% de la demanda que se <b>entrega desde stock</b></td></tr>
+<tr><td>Fórmula</td><td>α = Φ(z)</td><td>β = 1 − n(R)/Q</td></tr>
+<tr><td>Faltante esperado por ciclo</td><td colspan="2">n(R) = σ<sub>L</sub> · L(z) &nbsp; (L(z) = función de pérdida normal estándar = φ(z) − z·(1 − Φ(z)))</td></tr>
+</table></div>
+<div class="key">💡 Con la misma z, el fill rate sale <b>mucho más alto</b> que α: un quiebre pequeño casi no pierde unidades. Por eso para lograr un β dado necesitas <b>menos</b> SS que para igual α.</div>
+<h3>Procedimiento</h3>
+<div class="nb"><b>(α)</b> z = Φ⁻¹(α) → SS = zσ<sub>L</sub> → R = μ<sub>L</sub> + SS.<br><b>(β)</b> n(R) = (1 − β)·Q → L(z) = n(R)/σ<sub>L</sub> → busca z en la tabla de L(z) → R = μ<sub>L</sub> + zσ<sub>L</sub>.<br><b>(costo de quiebre p por unidad)</b> Φ(z) = 1 − Q·h/(p·d) → z → R.</div>
+<h3>Ejemplo (verificado): d = 100/día, σ<sub>d</sub> = 20/día, L = 9 días, Q = 400</h3>
+<p>μ<sub>L</sub> = 900 · σ<sub>L</sub> = 20·√9 = 60.</p>
+<ul><li>α = 95% → z = 1,6449 → SS = 98,7 → <b>R = 998,7</b>.</li>
+<li>β = 95% → n(R) = 0,05·400 = 20 → L(z) = 20/60 = 0,333 → z ≈ 0,139 → SS = 8,3 → <b>R = 908,3</b> (¡mucho menor!).</li></ul>
+<div class="q" data-ans="98.7" data-tol="0.4" data-errs="296:Usaste σ·L en vez de σ·√L (60 no es 20·9).|900:Ese es μL, te falta sumar/calcular SS."><div class="t">🧮 Con los datos del ejemplo y servicio por ciclo de 95%, ¿cuánto es el stock de seguridad?</div><input type="text"> <button>Revisar</button><details><summary>💡 Pista</summary>σL = 20·√9 = 60; SS = 1,6449·60.</details><div class="fb"></div></div>
+<div class="q" data-ans="998.7" data-tol="0.5"><div class="t">🧮 ¿Cuál es R (en unidades)?</div><input type="text"> <button>Revisar</button><div class="fb"></div></div>
+<div class="q" data-type="mc"><div class="t">🧠 L sube de 9 a 36 días (×4). ¿Cuánto sube el SS?</div><div class="opts">
+<button data-fb="Subiría ×4 si fuera proporcional a L, pero σ crece con √L.">×4</button>
+<button data-ok data-fb="¡Sí! σL = σd·√L, y √4 = 2.">×2</button>
+<button data-fb="Sube: más plazo = más incertidumbre acumulada.">No cambia</button></div><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<section id="s12" data-min="12" data-ess="1">
+<h2>12 · 🗓️ Revisión periódica (T, S)</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 12 min</span><span class="e">⭐ esencial</span></div>
+<p>Aquí no miras el inventario siempre: lo <b>revisas cada T días</b> y pides lo necesario para llegar a un nivel objetivo <b>S</b> ("order-up-to"). Puede llegar demanda en T + L (hasta que llegue el pedido de la próxima revisión), así que la protección debe cubrir <b>T + L</b>.</p>
+<div class="eq big">S = μ·(T + L) + z·σ<sub>d</sub>·√(T + L) &nbsp;&nbsp; Pedido = S − posición de inventario</div>
+<div class="eq">Posición = disponible + pedidos en camino − demanda pendiente</div>
+<p>T típico = Q*/d del EOQ (ej. EOQ 700, d = 100/día → T = 7 días).</p>
+<div class="key">💡 <b>Revisión periódica necesita más SS</b> que la continua con los mismos datos: protege T+L en vez de L. Se usa cuando conviene revisar todos los productos juntos o no se puede monitorear continuamente.</div>
+<p><b>Ejemplo (verificado):</b> d = 100/día, σ<sub>d</sub> = 20, T = 7, L = 9, α = 95% → T+L = 16 → σ = 20·4 = 80 → SS = 131,6 → <b>S = 1.600 + 131,6 = 1.731,6</b>. Si hoy la posición es 1.200 → pides 531,6.</p>
+<div class="q" data-ans="131.6" data-tol="0.5" data-errs="98.7:Eso es el SS de (Q,R) con L = 9. En periódica usas T + L = 16."><div class="t">🧮 Calcula el SS en revisión periódica con esos datos.</div><input type="text"> <button>Revisar</button><details><summary>💡 Pista</summary>σ = 20·√16 = 80; SS = 1,6449·80.</details><div class="fb"></div></div>
+<div class="q" data-ans="531.6" data-tol="0.6"><div class="t">🧮 La posición de inventario hoy es 1.200. ¿Cuánto pides?</div><input type="text"> <button>Revisar</button><div class="fb"></div></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+
+<section id="s13" data-min="15" data-ess="1">
+<h2>13 · 📰 Un solo período: vendedor de diarios (newsvendor)</h2>
+<div class="ind"><span>🧠 + 🧮</span><span>⏱ 15 min</span><span class="e">⭐ esencial</span></div>
+<p>Productos perecibles o de temporada: <b>una sola decisión</b> de cuánto pedir (Q) antes de saber la demanda. Si pides poco, pierdes ventas; si pides mucho, te sobra.</p>
+<div class="eq">C<sub>u</sub> (faltante, por unidad) = precio − costo &nbsp;&nbsp; C<sub>o</sub> (sobrante) = costo − valor de salvamento</div>
+<div class="eq big"><span class="lbl">Razón crítica</span>CR = <span class="fr"><span>C<sub>u</sub></span><span>C<sub>u</sub> + C<sub>o</sub></span></span> = P(D ≤ Q*)</div>
+<div class="nb"><b>Demanda normal:</b> z = Φ⁻¹(CR) → Q* = μ + z·σ.<br><b>Demanda discreta (tabla):</b> acumula las probabilidades y toma el <b>menor Q cuyo F(Q) ≥ CR</b>.<br>No pides la media: si C<sub>u</sub> &gt; C<sub>o</sub> (CR &gt; 50%) pides <b>más</b> que la media; si C<sub>u</sub> &lt; C<sub>o</sub>, <b>menos</b>.</div>
+<p><b>Con la función de pérdida:</b> faltante esperado = σ·L(z) · vendido esperado = μ − σ·L(z) · sobrante esperado = Q − μ + σ·L(z).</p>
+<p><b>Ejemplo (verificado):</b> precio 100, costo 60, salvamento 30; demanda normal μ = 200, σ = 40. C<sub>u</sub> = 40, C<sub>o</sub> = 30 → CR = 40/70 = 0,5714 → z = 0,18 → <b>Q* = 207,2</b>. Faltante esperado = 12,6 · vendido esperado = 187,4.</p>
+<div class="q" data-ans="0.5714" data-tol="0.002" data-errs="0.4286:Invertiste Cu y Co: CR = Cu/(Cu+Co) con Cu = precio − costo."><div class="t">🧮 Calcula CR con precio 100, costo 60 y salvamento 30 (puedes escribir 0,5714 o 57,14%).</div><input type="text"> <button>Revisar</button><div class="fb"></div></div>
+<div class="q" data-type="mc"><div class="t">🧠 Baja el valor de salvamento (el sobrante vale menos). ¿Qué pasa con Q*?</div><div class="opts">
+<button data-ok data-fb="¡Sí! Co sube, CR = Cu/(Cu+Co) baja, z baja y pides menos.">Baja</button>
+<button data-fb="Al valer menos el sobrante, sobrar duele más: te conviene pedir menos.">Sube</button>
+<button data-fb="Co = costo − salvamento cambia, y con él CR y Q*.">No cambia</button></div><div class="fb"></div></div>
+<h3>📒 Formulario estocástico</h3>
+<div class="tw"><table>
+<tr><td>Demanda en el plazo</td><td>μ<sub>L</sub> = d·L · σ<sub>L</sub> = σ<sub>d</sub>√L</td></tr>
+<tr><td>(Q, R)</td><td>SS = zσ<sub>L</sub> · R = μ<sub>L</sub> + SS · α = Φ(z)</td></tr>
+<tr><td>Fill rate</td><td>β = 1 − σ<sub>L</sub>·L(z)/Q</td></tr>
+<tr><td>Periódica</td><td>S = μ(T+L) + zσ<sub>d</sub>√(T+L)</td></tr>
+<tr><td>Newsvendor</td><td>CR = Cu/(Cu+Co) · Q* = μ + zσ</td></tr>
+</table></div>
+<button class="donebtn o">✔ Lo entendí</button>
+</section>
+</main>
+
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const fmt = (x, d = 2) => x.toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d });
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+// ---- progreso y filtro esencial
+const done = store.get('inv-done') || {};
+function updPend() {
+  const ess = document.body.classList.contains('ess');
+  let m = 0;
+  $$('section').forEach(s => { s.classList.toggle('done', !!done[s.id]); if (!done[s.id] && (!ess || s.dataset.ess)) m += +s.dataset.min; });
+  $('#pend').textContent = m ? `⏱ Te quedan ~${m} min` : '🎉 ¡Terminaste!';
+}
+$$('.donebtn').forEach(b => {
+  const s = b.closest('section');
+  const paint = () => b.textContent = done[s.id] ? '↩ Marcar como pendiente' : '✔ Lo entendí';
+  paint();
+  b.onclick = () => { done[s.id] = !done[s.id]; store.set('inv-done', done); paint(); updPend(); };
+});
+$('#essOnly').onchange = e => { document.body.classList.toggle('ess', e.target.checked); updPend(); };
+updPend();
+
+// ---- preguntas numéricas (acepta coma o punto; "1.909,4" y "1909.4")
+function cands(raw) {
+  let s = raw.replace(/[\s$%]/g, '');
+  if (!s) return [];
+  const out = [];
+  if (s.includes(',') && s.includes('.')) out.push(s.replace(/\./g, '').replace(',', '.'));
+  else if (s.includes(',')) out.push(s.replace(',', '.'));
+  else { out.push(s); if (/^\d{1,3}(\.\d{3})+$/.test(s)) out.push(s.replace(/\./g, '')); }
+  return out.map(Number).filter(x => !isNaN(x));
+}
+$$('.q[data-ans]').forEach(q => {
+  const ans = Number(q.dataset.ans), tol = Number(q.dataset.tol), inp = $('input', q), fb = $('.fb', q);
+  const errs = (q.dataset.errs || '').split('|').filter(Boolean).map(e => { const i = e.indexOf(':'); return [Number(e.slice(0, i)), e.slice(i + 1)]; });
+  const check = () => {
+    const xs = cands(inp.value);
+    if (!xs.length) { fb.className = 'fb no'; fb.textContent = 'Escribe un número.'; return; }
+    if (xs.some(x => Math.abs(x - ans) <= tol)) { fb.className = 'fb ok'; fb.textContent = `✅ ¡Correcto! (${fmt(ans)})`; return; }
+    const e = errs.find(([v]) => xs.some(x => Math.abs(x - v) <= Math.max(tol, Math.abs(v) * .003)));
+    fb.className = 'fb no';
+    fb.innerHTML = e ? `❌ ${e[1]}` : '❌ No coincide. Revisa las unidades (año vs día) y que h = tasa · precio. <button class="o sol">Ver respuesta</button>';
+    const sb = $('.sol', fb); if (sb) sb.onclick = () => fb.textContent = `Respuesta: ${fmt(ans)}. Revisa la pista y rehazlo en papel.`;
+  };
+  $('button', q).onclick = check;
+  inp.onkeydown = e => { if (e.key === 'Enter') check(); };
+});
+// ---- alternativas
+$$('.q[data-type=mc]').forEach(q => {
+  const fb = $('.fb', q);
+  $$('.opts button', q).forEach(b => b.onclick = () => {
+    const ok = b.hasAttribute('data-ok');
+    b.classList.add(ok ? 'okk' : 'bad');
+    fb.className = 'fb ' + (ok ? 'ok' : 'no');
+    fb.textContent = (ok ? '✅ ' : '❌ ') + b.dataset.fb;
+  });
+});
+
+// ---- utilidades SVG
+const NS = 'http://www.w3.org/2000/svg';
+function el(svg, tag, attrs, txt) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+const outBox = (id, items) => $(id).innerHTML = items.map(([k, v]) => `<div>${k}<b>${v}</b></div>`).join('');
+
+// ---- Lab EOQ (d=1200, K=5000, h=500)
+(function () {
+  const d = 1200, K = 5000, h = 500, Qs = Math.sqrt(2 * K * d / h), Cs = Math.sqrt(2 * K * d * h);
+  const svg = $('#eoqSvg'), W = 420, H = 220, x0 = 40, y0 = 190, qMax = 400, cMax = 160000;
+  const X = q => x0 + (q / qMax) * (W - x0 - 10), Y = c => y0 - (c / cMax) * (y0 - 10);
+  function draw() {
+    const Q = +$('#eoqQ').value; svg.innerHTML = '';
+    el(svg, 'line', { x1: x0, y1: y0, x2: W - 10, y2: y0, stroke: 'currentColor', opacity: .4 });
+    el(svg, 'line', { x1: x0, y1: 10, x2: x0, y2: y0, stroke: 'currentColor', opacity: .4 });
+    const curve = (f, col, w) => { let p = ''; for (let q = 20; q <= qMax; q += 4) p += `${X(q)},${Y(Math.min(f(q), cMax))} `; el(svg, 'polyline', { points: p, fill: 'none', stroke: col, 'stroke-width': w }); };
+    curve(q => K * d / q, 'var(--warn)', 2); curve(q => h * q / 2, 'var(--acc2)', 2); curve(q => K * d / q + h * q / 2, 'var(--acc)', 3);
+    el(svg, 'line', { x1: X(Qs), y1: y0, x2: X(Qs), y2: 10, stroke: 'currentColor', opacity: .3, 'stroke-dasharray': '3 3' });
+    el(svg, 'line', { x1: X(Q), y1: y0, x2: X(Q), y2: 10, stroke: 'var(--acc)', 'stroke-width': 1.5 });
+    el(svg, 'circle', { cx: X(Q), cy: Y(K * d / Q + h * Q / 2), r: 5, fill: 'var(--acc)' });
+    el(svg, 'text', { x: X(Qs) + 3, y: 22 }, 'Q* = 155'); el(svg, 'text', { x: W - 60, y: Y(h * qMax / 2) + 14, style: 'fill:var(--acc2)' }, 'mantener');
+    el(svg, 'text', { x: x0 + 8, y: 26, style: 'fill:var(--warn)' }, 'pedir'); el(svg, 'text', { x: W - 50, y: y0 + 16 }, 'Q →'); el(svg, 'text', { x: x0 + 40, y: 14, style: 'fill:var(--acc)' }, 'costo total');
+    const C = K * d / Q + h * Q / 2;
+    outBox('#eoqOut', [['Q', Q], ['Costo de pedir', '$' + fmt(K * d / Q, 0)], ['Costo de mantener', '$' + fmt(h * Q / 2, 0)], ['Total', '$' + fmt(C, 0)], ['Sobrecosto vs Q*', fmt((C / Cs - 1) * 100, 2) + '%'], ['Ciclo', fmt(Q / 4, 1) + ' días']]);
+  }
+  $('#eoqQ').oninput = draw; draw();
+})();
+
+// ---- Lab R (d=4/día, Q=155)
+(function () {
+  const d = 4, Q = 155, T = Q / d, svg = $('#rSvg'), W = 420, x0 = 30, y0 = 130, tMax = 200;
+  const X = t => x0 + (t / tMax) * (W - x0 - 10), Y = v => y0 - (v / 170) * (y0 - 10);
+  function draw() {
+    const L = +$('#rL').value, n = Math.floor(L / T), R = d * (L - n * T); svg.innerHTML = '';
+    el(svg, 'line', { x1: x0, y1: y0, x2: W - 10, y2: y0, stroke: 'currentColor', opacity: .4 });
+    let p = ''; for (let k = 0; k * T < tMax; k++) { const a = k * T, b = Math.min((k + 1) * T, tMax); p += `${X(a)},${Y(Q)} ${X(b)},${Y(Q - d * (b - a))} `; }
+    el(svg, 'polyline', { points: p, fill: 'none', stroke: 'var(--acc)', 'stroke-width': 2.2 });
+    el(svg, 'line', { x1: x0, y1: Y(R), x2: W - 10, y2: Y(R), stroke: 'var(--warn)', 'stroke-dasharray': '5 4' });
+    el(svg, 'text', { x: W - 70, y: Y(R) - 4, style: 'fill:var(--warn)' }, 'R = ' + fmt(R, 1));
+    for (let k = 1; k * T - L < tMax; k++) { const te = k * T - L; if (te >= 0) el(svg, 'text', { x: X(te) - 5, y: y0 + 12, style: 'fill:var(--warn)' }, '▼'); }
+    el(svg, 'text', { x: W - 40, y: y0 + 12 }, 'días');
+    outBox('#rOut', [['Plazo L', L + ' días'], ['Ciclo T', '38,75 días'], ['n = ⌊L/T⌋ (pedidos en camino)', n], ['R físico', fmt(R, 1) + ' unid'], ['R sobre posición = d·L', fmt(d * L, 0) + ' unid']]);
+  }
+  $('#rL').oninput = draw; draw();
+})();
+
+// ---- Lab EPQ (d=4/día, K=5000, h=500, 300 días)
+(function () {
+  const d = 4, K = 5000, h = 500, dA = d * 300, svg = $('#epqSvg'), W = 420, x0 = 30, y0 = 130, tMax = 140;
+  const X = t => x0 + (t / tMax) * (W - x0 - 10), Y = v => y0 - (v / 260) * (y0 - 10);
+  function draw() {
+    const P = +$('#epqP').value, f = 1 - d / P, Q = Math.sqrt(2 * K * dA / (h * f)), Tp = Q / P, Hm = Q * f, T = Q / d; svg.innerHTML = '';
+    el(svg, 'line', { x1: x0, y1: y0, x2: W - 10, y2: y0, stroke: 'currentColor', opacity: .4 });
+    let p = ''; for (let k = 0; k * T < tMax; k++) { const a = k * T; p += `${X(a)},${Y(0)} ${X(a + Tp)},${Y(Hm)} ${X(Math.min(a + T, tMax))},${Y(a + T <= tMax ? 0 : Hm - d * (tMax - a - Tp))} `; }
+    el(svg, 'polyline', { points: p, fill: 'none', stroke: 'var(--acc)', 'stroke-width': 2.2 });
+    el(svg, 'line', { x1: x0, y1: Y(Q), x2: W - 10, y2: Y(Q), stroke: 'var(--acc2)', 'stroke-dasharray': '4 4' });
+    el(svg, 'text', { x: W - 80, y: Y(Q) - 4, style: 'fill:var(--acc2)' }, 'Q = ' + fmt(Q, 0));
+    el(svg, 'text', { x: W - 40, y: y0 + 12 }, 'días');
+    outBox('#epqOut', [['P', P + '/día'], ['1 − d/P', fmt(f, 3)], ['EPQ Q*', fmt(Q, 1)], ['EOQ (comparar)', '154,9'], ['H máx.', fmt(Hm, 1)], ['Tp produciendo', fmt(Tp, 1) + ' días'], ['Ciclo T', fmt(T, 1) + ' días']]);
+  }
+  $('#epqP').oninput = draw; draw();
+})();
+</script>
+</body>
+</html>
