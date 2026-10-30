@@ -146,8 +146,11 @@ def escribir_modelo(inv, resumenes):
     for n, c in inv["comp"].items():
         lineas.append(f"  {n} | {c['D']} | {c['S']} | {c['c']} | {c['i'] * c['c']} | {c['v']}")
     lineas.append("")
+    def fmt(x):  # 1e18 es el centinela interno de "recurso sin límite"
+        return "sin límite" if x >= 1e17 else f"{x:,.0f}".replace(",", ".")
+
     for r in resumenes.to_dict("records"):
-        lineas.append(f"Escenario {r['Escenario']}: V={r['V']:g}, K={r['K']:g} -> mu={r['mu']:.4f}, "
+        lineas.append(f"Escenario {r['Escenario']}: V={fmt(r['V'])} m3, K={fmt(r['K'])} $ -> mu={r['mu']:.4f}, "
                       f"lambda={r['lam']:.6f}, costo relevante={r['Costo_relevante']:,.0f}")
     (RESULTADOS / "modelos_lp").mkdir(parents=True, exist_ok=True)
     (RESULTADOS / "modelos_lp" / "ModeloE_Sol9_EOQ_multiproducto.txt").write_text("\n".join(lineas) + "\n", encoding="utf-8")

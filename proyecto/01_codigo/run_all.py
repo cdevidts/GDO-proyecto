@@ -44,6 +44,7 @@ def main():
     multi_res.to_csv(csv / "sol9_10_multiproducto_resumen.csv", index=False)
 
     # ---- resumen numérico (lo usa el informe) ----
+    M_ajustada = parte1_modelos.big_m_ajustada(plan)
     resumen = {
         "politicas": {n: parte1_politicas.resumen(df) for n, df in politicas.items()},
         "modelos": {n: {**parte1_politicas.resumen(df), "FO": z,
@@ -51,6 +52,8 @@ def main():
                     for n, (df, z) in modelos.items()},
         "relajacion_lineal_A": parte1_modelos.relajacion_lineal(plan),
         "big_M": parte1_modelos.big_m(plan),
+        "big_M_ajustada": M_ajustada,
+        "costo_B_con_M_ajustada": parte1_modelos.costo_optimo(plan, multa=True, M=M_ajustada),
         "factibilidad_EOQ": fact,
         "multiproducto": multi_res.to_dict("records"),
     }
@@ -67,7 +70,7 @@ def main():
         print(f"  {n:<20} {df.C_total_mes.sum():>16,.0f}")
     for n, (_, z) in modelos.items():
         print(f"  {n:<20} {z:>16,.0f}")
-    print("Factibilidad EOQ individuales:", {k: round(v, 2) for k, v in fact.items()})
+    print("Factibilidad EOQ individuales:", {k: round(float(v), 2) for k, v in fact.items()})
     print(multi_res[["Escenario", "mu", "lam", "Espacio_usado", "Capital_usado", "Costo_relevante"]].to_string(index=False))
     print(f"\nListo. Resultados en {RESULTADOS}")
 

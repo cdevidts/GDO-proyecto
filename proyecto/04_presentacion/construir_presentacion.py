@@ -4,8 +4,10 @@ Uso:  python construir_presentacion.py   (requiere python-pptx; usa las figuras 
 """
 from pathlib import Path
 
+from lxml import etree
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.oxml.ns import qn
 from pptx.util import Cm, Pt
 
 AQUI = Path(__file__).resolve().parent
@@ -20,6 +22,7 @@ VACIO = prs.slide_layouts[6]
 
 def titulo(s, texto, sub=None):
     tb = s.shapes.add_textbox(Cm(1.2), Cm(0.6), Cm(31.5), Cm(1.8)).text_frame
+    tb.word_wrap = True  # sin esto el cuadro queda wrap="none" y el título se centra según su largo
     tb.text = texto
     p = tb.paragraphs[0]
     p.runs[0].font.size, p.runs[0].font.bold, p.runs[0].font.color.rgb = Pt(28), True, AZUL
@@ -35,9 +38,14 @@ def vinetas(s, items, x, y, w, h, tam=16):
     for k, it in enumerate(items):
         p = tf.paragraphs[0] if k == 0 else tf.add_paragraph()
         nivel = 1 if it.startswith("  ") else 0
-        p.text = ("– " if nivel else "• ") + it.strip()
+        p.text = it.strip()
         p.level = nivel
         p.space_after = Pt(10)
+        # viñeta real con sangría francesa (el orden importa: buChar va después de spcAft)
+        pPr = p._p.get_or_add_pPr()
+        pPr.set("marL", str(571500 if nivel else 285750))
+        pPr.set("indent", "-285750")
+        etree.SubElement(pPr, qn("a:buChar")).set("char", "–" if nivel else "•")
         for r in p.runs:
             r.font.size = Pt(round((tam - 2 * nivel) * 1.25))
             r.font.color.rgb = GRIS if nivel else RGBColor(0x11, 0x11, 0x11)
@@ -65,6 +73,7 @@ def nota(s, texto):
 # 1. Portada
 s = prs.slides.add_slide(VACIO)
 tb = s.shapes.add_textbox(Cm(2), Cm(6), Cm(30), Cm(6)).text_frame
+tb.word_wrap = True
 tb.text = "Proyecto Integrador Ventisur"
 tb.paragraphs[0].runs[0].font.size, tb.paragraphs[0].runs[0].font.bold = Pt(40), True
 tb.paragraphs[0].runs[0].font.color.rgb = AZUL
@@ -84,11 +93,11 @@ tabla(s, [["", "P1 Tasa constante", "P2 Dotación + HE", "P3 Persecución"],
           ["Costo clave", "Inventario 52 MM$", "HE 15 + inv. 12 MM$", "Movimientos 40,5 MM$"],
           ["Costo total", "340,0 MM$", "315,0 MM$  ← mejor", "329,5 MM$"]],
       1.2, 3.6, 31.4, 1.1, 15)
-vinetas(s, ["P1: estable para personas y proveedores, pero guarda unidades 5–7 meses a $1.000/mes",
-            "P2: una HE ($2.500) cuesta menos que 2,5 meses de mantención → la mejor regla simple",
+vinetas(s, ["P1: estable para personas y proveedores, pero guarda las ~6.000 u del peak 6,7 meses en promedio ($1.000/mes)",
+            "P2: una HE ($2.500) = 2,5 meses de mantención; P1 guarda ~6,7 meses → la mejor regla simple",
             "P3: casi sin inventario, pero cada contratación ($2,5 MM) y despido ($3 MM) pesa más; inestable"],
         1.2, 11.0, 31, 7, 17)
-nota(s, "35 s. Énfasis: la diferencia no es la masa laboral (igual) sino el mecanismo. Umbral: si HE > $4.917/u, P3 supera a P2.")
+nota(s, "35 s. Énfasis: la diferencia no es la masa laboral (igual) sino el mecanismo. Umbrales: si HE > $4.917/u, P3 pasa a ser más barata que P2; P2 supera a P1 mientras HE < $6.667/u.")
 
 # 3. Modelo A
 s = prs.slides.add_slide(VACIO)
@@ -101,7 +110,12 @@ vinetas(s, ["Balance:  I(t−1) − B(t−1) + R + O − d = I − B",
             "  HE desde septiembre (saturada nov–feb), inventario solo 1–2 meses antes",
             "  Pendientes dic–ene: atrasar ($750) es más barato que adelantar ($1.000/mes)",
             "−14,25 MM$ (−4,5 %) vs la mejor política simple"], 1.2, 3.4, 15.5, 14, 15)
-s.shapes.add_picture(str(FIG / "fig1_planes.png"), Cm(16.6), Cm(5.0), width=Cm(16.9))
+s.shapes.add_picture(str(FIG / "slide_fig1_planes.png"), Cm(17.2), Cm(3.6), width=Cm(16.0))
+cap = s.shapes.add_textbox(Cm(1.2), Cm(16.6), Cm(15.4), Cm(2)).text_frame
+cap.word_wrap = True
+cap.text = ("Figura: producción del plan Sol. 5 (el Modelo A produce 400 u menos en octubre y 200 u más en "
+            "enero y febrero); inventario neto de A y Sol. 5.")
+cap.paragraphs[0].runs[0].font.size, cap.paragraphs[0].runs[0].font.color.rgb = Pt(12), GRIS
 nota(s, "50 s. Contraintuitivo: despedir y luego usar HE al 100 %; capacidad ociosa en marzo/mayo; atrasos con inventario antes. Todo por b<h y HE < 3 meses de mantención.")
 
 # 4. B, C y D
@@ -114,7 +128,7 @@ tabla(s, [["", "A", "B (multa)", "C / Sol. 5 (cero pend.)"],
           ["Multas", "—", "0 (nunca conviene pagar $3 MM)", "0"],
           ["Costo vs A", "—", "+193.750", "+350.000 (0,12 %)"]],
       1.2, 3.6, 31.4, 1.0, 15)
-vinetas(s, ["M(t) = demanda acumulada − I0 − 1 %·d(t): cota válida (peor caso no producir) y lo más ajustada posible",
+vinetas(s, ["M(t) = demanda acumulada − I0 − 1 %·d(t): cota válida (peor caso: no producir); existen cotas más ajustadas, el óptimo no cambia",
             "Misma dotación (18) y HE (13.000 u): se compra servicio con 800 u-mes de inventario anticipado",
             "Con B = 0 la cláusula nunca se activa: Sol. 5 coincide con C"], 1.2, 12.0, 31, 6, 16)
 nota(s, "45 s. Explicar y=1 forzado si B>1 %; si no, el costo hace y=0. M demasiado chico corta soluciones; muy grande debilita la relajación.")
@@ -123,12 +137,12 @@ nota(s, "45 s. Explicar y=1 forzado si B>1 %; si no, el costo hace y=0. M demasi
 s = prs.slides.add_slide(VACIO)
 titulo(s, "4. Recomendación de planificación agregada",
        "Plan Sol. 5: 18 trabajadores, regular ~9.000 u/mes, HE sep–feb, cero pendientes — 301,1 MM$")
-s.shapes.add_picture(str(FIG / "fig2_costos.png"), Cm(0.8), Cm(4.6), width=Cm(20.5))
+s.shapes.add_picture(str(FIG / "slide_fig2_costos.png"), Cm(0.6), Cm(4.4), width=Cm(20.3))
 vinetas(s, ["−13,9 MM$ (−4,4 %) vs P2 y servicio completo",
-            "Estable: un solo ajuste de personal",
+            "Estable en dotación y producción regular: un solo ajuste de personal (−2); P2 ninguno, pero con menos de la mitad de la HE",
             "Riesgo: HE al 100 % en nov–dic (93 % ene–feb)",
             "  Seguro parcial: 19 trabajadores (+1,4 MM$, +0,46 %)",
-            "  Sin despidos (20): +5,4 MM$"], 20.8, 4.0, 12.5, 12, 16)
+            "  Sin despidos (20): +5,4 MM$"], 21.2, 4.0, 12.3, 13, 16)
 nota(s, "30 s. No elegimos solo por costo: estabilidad, servicio y holgura de HE.")
 
 # 6. Parte II + EOQ
@@ -155,12 +169,12 @@ tabla(s, [["Escenario", "Espacio", "Capital", "Activas", "Costo relevante", "Aho
           ["Base", "90,0", "110,0", "ambas", "34.503.017", "—"],
           ["+10 % espacio", "92,1 de 99", "110,0", "solo capital", "34.497.798", "5.219"],
           ["+10 % presupuesto", "90,0", "121,0", "ambas", "34.116.426", "386.591"]],
-      1.2, 3.6, 18.5, 1.0, 12)
+      1.2, 3.6, 18.5, 1.0, 12, anchos=[4.4, 2.9, 2.2, 2.7, 3.2, 3.1])
 vinetas(s, ["Lotes −18 % a −21 %; 94 → 116 pedidos/año; +0,72 MM$/año",
             "Costo de compra (2.784 MM$) no depende de Q",
             "Activa ≠ valiosa: al ampliar bodega el capital limita casi de inmediato",
             "Más presupuesto vale 74× más que más bodega"], 1.2, 10.8, 18.5, 8, 15)
-s.shapes.add_picture(str(FIG / "fig3_lotes.png"), Cm(20.2), Cm(5.5), width=Cm(13.4))
+s.shapes.add_picture(str(FIG / "slide_fig3_lotes.png"), Cm(20.2), Cm(5.0), width=Cm(13.46))
 nota(s, "40 s. μ = 5.098 $/m³-año y λ = 0,0595 $/$-año son valores marginales locales; al relajar cambian.")
 
 # 8. Recomendación integrada
@@ -171,7 +185,7 @@ vinetas(s, ["Producción: plan Sol. 5 (18 trabajadores, HE en el peak, cero pend
             "Coherencia: comprar con la tasa estable de 10.000 u/mes exige holgura de componentes en oct–feb",
             "Compras: usar los lotes multiproducto (2.781 / 1.192 / 4.456 / 2.844 / 1.815) con ROP = d·L",
             "Inversión: priorizar presupuesto (+386 mil $/año) sobre bodega (+5 mil $/año)",
-            "  Rentabilidad marginal ≈ 3,5 % anual: comparar con el costo de financiar 11 MM$",
+            "  Ahorro medio 3,5 % anual sobre los 11 MM$ (marginal 5,95 % → 1,35 %); h ya incluye el costo de capital: ampliar si el tope es de caja y puede levantarse sin otros costos",
             "Supuestos: demanda y plazos determinísticos, unidad agregada, lotes completos simultáneos"],
         1.2, 3.0, 31.5, 15, 18)
 nota(s, "30 s. Cerrar conectando las tres partes y abrir a preguntas.")

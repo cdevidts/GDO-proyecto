@@ -15,3 +15,7 @@ figcaption { font-size: 7.6pt; font-style: italic; color: #444; }
 code { font-size: 8pt; }
 ol { margin: 2pt 0 2pt 16pt; padding: 0; } li { margin-bottom: 2pt; text-align: justify; }
 math[display="block"] { margin: 3pt 0; font-size: 10pt; }
+td:first-child { white-space: nowrap; }
+math { font-family: "Carlito", "Calibri", "Liberation Sans", sans-serif; }
+math mi { text-transform: none; font-style: italic; }
+h1, h2 { break-after: avoid; }

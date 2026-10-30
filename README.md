@@ -20,6 +20,7 @@ proyecto/
     parte1_politicas.py           Sol. 1: tres políticas simples + validador de factibilidad
     parte1_modelos.py             Sol. 2–5: modelos A, B (multa, binaria), C (cero pendientes), D
     parte1_sensibilidad.py        Escenarios "¿qué pasa si…?" para la recomendación y la defensa
+                                  (`python parte1_sensibilidad.py --unicidad` comprueba que el óptimo de A, B y C es único)
     parte2_requerimientos.py      Sol. 6: desagregación y requerimientos de componentes
     parte3_inventarios.py         Sol. 7–10: EOQ, factibilidad conjunta, EOQ multiproducto, sensibilidad
     generar_excel.py, graficos.py Respaldos (planilla con fórmulas y figuras)
@@ -28,7 +29,8 @@ proyecto/
     Resultados_Ventisur.xlsx      Planilla con fórmulas que recalculan balances, costos, EOQ y recursos
     modelos_lp/                   Modelos A–D (.lp; índice 0 = marzo, el lado derecho ya incluye d − I0)
                                   y Modelo E (EOQ multiproducto, no lineal) documentado en .txt
-    csv/, figuras/, resumen.json
+    csv/, resumen.json
+    figuras/                      fig1 y fig3 (informe), fig2 (respaldo) y slide_fig1–3 (versiones a escala 1:1 para las diapositivas)
   03_informe/                     Informe técnico (≤ 6 páginas): informe.md → .docx y .pdf
   04_presentacion/                Presentación de 5 min (.pptx) y guía de preparación de la defensa
 ```

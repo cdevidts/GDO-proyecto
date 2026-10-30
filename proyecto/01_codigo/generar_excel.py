@@ -88,9 +88,11 @@ def hoja_plan(wb, nombre, df, ref, titulo):
         ws.cell(i, 7, f"=C{i}*{ref['q_reg']}")
         ws.cell(i, 9, f"=C{i}*{ref['q_he']}")
         I_prev = ref["I0"] if k == 0 else f"J{i-1}"
-        B_prev = "0" if k == 0 else f"K{i-1}"
         W_prev = ref["W0"] if k == 0 else f"C{i-1}"
-        ws.cell(i, 12, f"={I_prev}-{B_prev}+F{i}+H{i}-B{i}-(J{i}-K{i})")
+        if k == 0:  # B_0 = 0: no se resta
+            ws.cell(i, 12, f"={I_prev}+F{i}+H{i}-B{i}-(J{i}-K{i})")
+        else:
+            ws.cell(i, 12, f"={I_prev}-K{i-1}+F{i}+H{i}-B{i}-(J{i}-K{i})")
         ws.cell(i, 13, f"=C{i}-{W_prev}-D{i}+E{i}")
         ws.cell(i, 14, f"=C{i}*{ref['c_lab']}")
         ws.cell(i, 15, f"=D{i}*{ref['c_con']}")
@@ -123,6 +125,7 @@ def hoja_plan(wb, nombre, df, ref, titulo):
             c.number_format = MILES
     ws.cell(t + 4, 1, "Celdas amarillas: decisiones (de la regla de la política o del solver). Resto: fórmulas.")
     _anchos(ws, 13, 12)
+    ws.freeze_panes = "B4"
     return f"'{nombre}'!U{t}"
 
 
@@ -164,6 +167,7 @@ def hoja_eoq(wb, inv):
     ws["A1"], ws["B1"] = "Días operativos", inv["dias"]
     ws["A2"], ws["B2"] = "Espacio máx (m3)", inv["V"]
     ws["A3"], ws["B3"] = "Capital máx ($)", inv["K"]
+    ws["B3"].number_format = MILES
     cols = ["Componente", "D", "S", "c", "tasa i", "v", "L", "h=i·c", "Q*", "N=D/Q", "T (días)", "d diaria",
             "ROP=d·L", "C. ordenar", "C. mantener", "C. relevante", "Espacio v·Q", "Capital c·Q"]
     _encabezado(ws, 5, cols)
@@ -172,7 +176,7 @@ def hoja_eoq(wb, inv):
         i = f0 + k
         ws.cell(i, 1, n)
         for j, key in enumerate(["D", "S", "c", "i", "v", "L"], 2):
-            ws.cell(i, j, p[key])
+            ws.cell(i, j, p[key]).number_format = MILES if j in (2, 3, 4) else "General"
         fx = {
             8: f"=E{i}*D{i}", 9: f"=SQRT(2*B{i}*C{i}/H{i})", 10: f"=B{i}/I{i}", 11: f"=I{i}/L{i}",
             12: f"=B{i}/$B$1", 13: f"=L{i}*G{i}", 14: f"=B{i}*C{i}/I{i}", 15: f"=H{i}*I{i}/2",
@@ -199,17 +203,21 @@ def hoja_multiproducto(wb, inv, resumenes):
     ws = wb.create_sheet("EOQ_Multiproducto")
     ws["A1"] = "Q_i = RAIZ(2·D·S / (h + 2·mu·v + 2·lambda·c))  — mu, lambda obtenidos en Python (KKT)"
     ws["A1"].font = NEGRITA
-    fila = 3
+    ws["A2"], ws["B2"] = "Días operativos", inv["dias"]
+    fila = 4
     for res in resumenes:
+        ilimV, ilimK = res["V"] >= 1e12, res["K"] >= 1e12  # 1e18 = centinela de "recurso sin límite"
         ws.cell(fila, 1, f"Escenario: {res['Escenario']}").font = Font(bold=True, size=12)
         ws.cell(fila + 1, 1, "V (m3)")
-        ws.cell(fila + 1, 2, min(res["V"], 1e12))
+        ws.cell(fila + 1, 2, "sin límite" if ilimV else res["V"])
         ws.cell(fila + 2, 1, "K ($)")
-        ws.cell(fila + 2, 2, min(res["K"], 1e15)).number_format = MILES
+        ws.cell(fila + 2, 2, "sin límite" if ilimK else res["K"]).number_format = MILES
         ws.cell(fila + 1, 3, "mu ($/m3-año)")
         ws.cell(fila + 1, 4, res["mu"]).fill = AMARILLO
+        ws.cell(fila + 1, 4).number_format = "#,##0.0000"
         ws.cell(fila + 2, 3, "lambda ($/$-año)")
         ws.cell(fila + 2, 4, res["lam"]).fill = AMARILLO
+        ws.cell(fila + 2, 4).number_format = "0.000000"
         vr, kr, mr, lr = f"$B${fila+1}", f"$B${fila+2}", f"$D${fila+1}", f"$D${fila+2}"
         h0 = fila + 4
         _encabezado(ws, h0, ["Componente", "D", "S", "c", "h", "v", "L", "Q", "N", "T (días)", "ROP posición",
@@ -221,7 +229,7 @@ def hoja_multiproducto(wb, inv, resumenes):
                 ws.cell(i, j, v)
             fx = {
                 8: f"=SQRT(2*B{i}*C{i}/(E{i}+2*{mr}*F{i}+2*{lr}*D{i}))", 9: f"=B{i}/H{i}",
-                10: f"=H{i}/(B{i}/{inv['dias']})", 11: f"=B{i}/{inv['dias']}*G{i}", 12: f"=B{i}*C{i}/H{i}",
+                10: f"=H{i}/(B{i}/$B$2)", 11: f"=B{i}/$B$2*G{i}", 12: f"=B{i}*C{i}/H{i}",
                 13: f"=E{i}*H{i}/2", 14: f"=L{i}+M{i}", 15: f"=F{i}*H{i}", 16: f"=D{i}*H{i}",
             }
             for j, f in fx.items():
@@ -234,28 +242,39 @@ def hoja_multiproducto(wb, inv, resumenes):
             ws[f"{col}{t}"].number_format = DEC
             ws[f"{col}{t}"].font = NEGRITA
         ws.cell(t + 1, 1, "Holgura espacio")
-        ws.cell(t + 1, 2, f"={vr}-O{t}").number_format = DEC
+        ws.cell(t + 1, 2, f'=IF(ISNUMBER({vr}),{vr}-O{t},"sin límite")').number_format = DEC
         ws.cell(t + 2, 1, "Holgura capital")
-        ws.cell(t + 2, 2, f"={kr}-P{t}").number_format = MILES
+        ws.cell(t + 2, 2, f'=IF(ISNUMBER({kr}),{kr}-P{t},"sin límite")').number_format = MILES
         fila = t + 5
-    _anchos(ws, 13, 22)
+    _anchos(ws, 16, 22)
+    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["P"].width = 22
 
 
-def hoja_df(wb, nombre, df, nota=None):
+def hoja_df(wb, nombre, df, nota=None, renombre=None, anchos=None):
+    """Vuelca un DataFrame; `renombre` solo cambia los encabezados del Excel (el CSV no cambia)."""
     ws = wb.create_sheet(nombre)
-    _encabezado(ws, 1, list(df.columns))
+    _encabezado(ws, 1, [(renombre or {}).get(c, c) for c in df.columns])
     for i, row in enumerate(df.itertuples(index=False), 2):
         for j, v in enumerate(row, 1):
             if isinstance(v, (list, tuple)):
                 v = ", ".join(map(str, v))
             elif hasattr(v, "item"):
                 v = v.item()
+            if isinstance(v, float) and v >= 1e12:  # centinela 1e18 = "recurso sin límite"
+                v = "sin límite"
             c = ws.cell(i, j, v)
+            if isinstance(v, bool):
+                continue
             if isinstance(v, float):
                 c.number_format = DEC if abs(v) < 1000 else MILES
+            elif isinstance(v, int):
+                c.number_format = MILES
     if nota:
         ws.cell(len(df) + 3, 1, nota)
     _anchos(ws, 16, 34)
+    for col, ancho in (anchos or {}).items():
+        ws.column_dimensions[col].width = ancho
 
 
 def generar(plan, tr, inv, politicas, modelos, sens1, ind, multi_res, sens1_nota):
@@ -290,11 +309,16 @@ def generar(plan, tr, inv, politicas, modelos, sens1, ind, multi_res, sens1_nota
         extra[n] = dict(unid_HE=df.Prod_HE.sum(), inv=df.Inventario_final.sum(), pend=df.Pendientes.sum(),
                         H=df.Contrataciones.sum(), F=df.Despidos.sum(), wmin=df.Dotacion.min(), wmax=df.Dotacion.max())
     hoja_resumen_planes(wb, totales, extra)
-    hoja_df(wb, "Sensibilidad_P1", sens1, sens1_nota)
+    ren = {"estado": "Estado solver", "costo": "Costo total ($)", "dotacion": "Dotación mensual (trab.)",
+           "contrataciones": "Contrataciones (trab.)", "despidos": "Despidos (trab.)", "unid_HE": "HE total (u)",
+           "HE_mensual": "HE mensual (u)", "holgura_HE": "Holgura de HE mensual (u)",
+           "inv_total": "Inventario acumulado (u-mes)", "pendientes": "Pendientes acumulados (u-mes)"}
+    hoja_df(wb, "Sensibilidad_P1", sens1, sens1_nota, ren,
+            anchos={"A": 56, "B": 13, "C": 16, "D": 46, "H": 62, "I": 70})
     hoja_desagregacion(wb, tr)
     hoja_eoq(wb, inv)
     hoja_multiproducto(wb, inv, multi_res.to_dict("records"))
-    hoja_df(wb, "Resumen_Multiproducto", multi_res)
+    hoja_df(wb, "Resumen_Multiproducto", multi_res, anchos={"A": 28})
     out = RESULTADOS / "Resultados_Ventisur.xlsx"
     wb.save(out)
     _cachear_valores(out)

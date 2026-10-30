@@ -4,6 +4,7 @@ Se resuelven variantes del modelo recomendado (Sol. 5: multa + cero pendientes) 
 para cuantificar trade-offs de estabilidad, holgura de horas extra y cambios de costos.
 """
 import copy
+import sys
 
 import pandas as pd
 import pulp
@@ -25,9 +26,12 @@ def _resolver(plan, extra=None, **kw):
         estado=estado,
         costo=pulp.value(m.objective),
         dotacion=[round(v["W"][t].value()) for t in T],
-        unid_HE=sum(v["O"][t].value() for t in T),
-        pendientes=sum(v["B"][t].value() for t in T),
-        inv_total=sum(v["I"][t].value() for t in T),
+        unid_HE=round(sum(v["O"][t].value() for t in T), 6),
+        HE_mensual=[round(v["O"][t].value()) for t in T],
+        # holgura de HE = capacidad de HE (150 u por trabajador) menos HE usada, por mes
+        holgura_HE=[round(plan["prod_he"] * v["W"][t].value() - v["O"][t].value()) for t in T],
+        pendientes=round(sum(v["B"][t].value() for t in T), 6),
+        inv_total=round(sum(v["I"][t].value() for t in T), 6),
         despidos=sum(round(v["F"][t].value()) for t in T),
         contrataciones=sum(round(v["H"][t].value()) for t in T),
     )
@@ -76,11 +80,45 @@ def ejecutar():
         r["Escenario"] = nombre
         filas.append(r)
     df = pd.DataFrame(filas)
-    cols = ["Escenario", "estado", "costo", "dotacion", "contrataciones", "despidos", "unid_HE", "inv_total", "pendientes"]
+    cols = ["Escenario", "estado", "costo", "dotacion", "contrataciones", "despidos", "unid_HE", "HE_mensual",
+            "holgura_HE", "inv_total", "pendientes"]
     return df[cols]
+
+
+def unicidad_optimo(plan, tol=10.0, variables=("W", "R", "O", "I", "B"), **kw):
+    """Comprueba si el óptimo es único: con el costo acotado por Z* + tol ($), minimiza y maximiza cada
+    variable en cada mes y devuelve el mayor rango (max - min) hallado por variable. Un rango ~0
+    (< 0,1 u; el resto es la tolerancia de costo y ruido numérico) significa que no hay óptimos alternativos.
+    No se ejecuta desde run_all.py (son ~120 optimizaciones por modelo):  python parte1_sensibilidad.py --unicidad
+    """
+    m0, _ = construir(plan, **kw)
+    m0.solve(SOLVER)
+    z = pulp.value(m0.objective)
+    T = range(len(plan["meses"]))
+    rangos = {}
+    for nombre in variables:
+        mayor = 0.0
+        for t in T:
+            extremos = []
+            for sentido in (pulp.LpMinimize, pulp.LpMaximize):
+                m, v = construir(plan, **kw)
+                m += m.objective <= z + tol, "tope_costo"
+                m.setObjective(v[nombre][t])
+                m.sense = sentido
+                m.solve(SOLVER)
+                extremos.append(v[nombre][t].value())
+            mayor = max(mayor, extremos[1] - extremos[0])
+        rangos[nombre] = round(mayor, 4)
+    return z, rangos
 
 
 if __name__ == "__main__":
     pd.set_option("display.width", 250)
     pd.set_option("display.max_colwidth", 80)
-    print(ejecutar().to_string(index=False))
+    if "--unicidad" in sys.argv:
+        plan0, _, _ = cargar()
+        for nombre, kw in [("Modelo A", {}), ("Modelo B", dict(multa=True)), ("Modelo C", dict(cero_pend=True))]:
+            z, rangos = unicidad_optimo(plan0, **kw)
+            print(f"{nombre}: Z* = {z:,.0f}; mayor rango (max - min) de cada variable en el conjunto óptimo: {rangos}")
+    else:
+        print(ejecutar().to_string(index=False))

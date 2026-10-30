@@ -15,8 +15,8 @@ Datos: componente | D | S | c | h=0,25c | v
   Módulo electrónico | 60000 | 200000 | 8000 | 2000.0 | 0.0015
   Control remoto | 24000 | 140000 | 5500 | 1375.0 | 0.001
 
-Escenario Base: V=90, K=1.1e+08 -> mu=5097.8560, lambda=0.059493, costo relevante=34,503,017
-Escenario +10% espacio: V=99, K=1.1e+08 -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798
-Escenario +10% presupuesto: V=90, K=1.21e+08 -> mu=24784.5202, lambda=0.013519, costo relevante=34,116,426
-Escenario Solo espacio (sin capital): V=90, K=1e+18 -> mu=31253.7348, lambda=0.000000, costo relevante=34,089,228
-Escenario Solo capital (sin espacio): V=1e+18, K=1.1e+08 -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798
+Escenario Base: V=90 m3, K=110.000.000 $ -> mu=5097.8560, lambda=0.059493, costo relevante=34,503,017
+Escenario +10% espacio: V=99 m3, K=110.000.000 $ -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798
+Escenario +10% presupuesto: V=90 m3, K=121.000.000 $ -> mu=24784.5202, lambda=0.013519, costo relevante=34,116,426
+Escenario Solo espacio (sin capital): V=90 m3, K=sin límite $ -> mu=31253.7348, lambda=0.000000, costo relevante=34,089,228
+Escenario Solo capital (sin espacio): V=sin límite m3, K=110.000.000 $ -> mu=0.0000, lambda=0.063616, costo relevante=34,497,798

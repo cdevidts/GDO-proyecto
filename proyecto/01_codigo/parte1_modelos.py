@@ -24,7 +24,8 @@ def big_m(plan):
 
     En el peor caso no se produce nada hasta t (la producción regular puede ser 0), por lo
     que los pendientes nunca superan la demanda acumulada menos el inventario inicial.
-    M_t = sum_{k<=t} d_k - I_0 - 0,01 d_t es la constante más ajustada que no corta soluciones.
+    M_t = sum_{k<=t} d_k - I_0 - 0,01 d_t es una cota válida y simple (existen cotas más ajustadas:
+    ignora las condiciones finales B_12 = 0 e I_12 >= 1.000 y la capacidad máxima mensual).
     """
     acum, M = 0, []
     for d in plan["demanda"]:
@@ -33,7 +34,33 @@ def big_m(plan):
     return M
 
 
-def construir(plan, multa=False, cero_pend=False, nombre="ModeloA"):
+def big_m_ajustada(plan):
+    """Cota más ajustada de B_t - 0,01 d_t (solo para comparar con big_m; el modelo usa big_m).
+
+    Resuelve, para cada mes t, el LP "maximizar B_t con I_t = 0" sobre el Modelo A, es decir, considera
+    las condiciones finales (B_12 = 0, I_12 >= 1.000) y la capacidad máxima mensual. Coincide con big_m
+    hasta abril y es mucho menor desde el peak (p. ej. diciembre: 9.375 contra 96.875).
+    """
+    T = range(len(plan["meses"]))
+    M = []
+    for t in T:
+        m, v = construir(plan)
+        m += v["I"][t] == 0, "sin_inventario_simultaneo"
+        m.setObjective(v["B"][t])
+        m.sense = pulp.LpMaximize
+        m.solve(SOLVER)
+        M.append(max(v["B"][t].value() - plan["pct_multa"] * plan["demanda"][t], 0.0))
+    return M
+
+
+def costo_optimo(plan, **kw):
+    """Valor óptimo del modelo sin escribir archivos (sirve para comparar variantes, p. ej. otro M)."""
+    m, _ = construir(plan, **kw)
+    m.solve(SOLVER)
+    return pulp.value(m.objective)
+
+
+def construir(plan, multa=False, cero_pend=False, nombre="ModeloA", M=None):
     T = range(len(plan["meses"]))
     d = plan["demanda"]
     m = pulp.LpProblem(nombre, pulp.LpMinimize)
@@ -73,7 +100,7 @@ def construir(plan, multa=False, cero_pend=False, nombre="ModeloA"):
     y = None
     if multa:
         y = pulp.LpVariable.dicts("y", T, cat="Binary")
-        M = big_m(plan)
+        M = M if M is not None else big_m(plan)
         for t in T:
             # Si B_t supera el 1 % de d_t, obliga y_t = 1 (y se paga la multa)
             m += B[t] <= plan["pct_multa"] * d[t] + M[t] * y[t], f"multa_{t}"
@@ -136,3 +163,7 @@ if __name__ == "__main__":
     print("\nRelajación lineal A:", f"{relajacion_lineal(plan):,.0f}")
     print("Relajación lineal C:", f"{relajacion_lineal(plan, cero_pend=True):,.0f}")
     print("Big-M:", big_m(plan))
+    Mt = big_m_ajustada(plan)
+    print("Big-M ajustada:", Mt)
+    print("Z_B con M simple:", f"{costo_optimo(plan, multa=True):,.0f}", "| con M ajustada:",
+          f"{costo_optimo(plan, multa=True, M=Mt):,.0f}")
