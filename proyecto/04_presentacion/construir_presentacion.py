@@ -463,7 +463,7 @@ rect(s, M, 5.0, 1.6, 0.16, SKY)
 texto(s, M, 5.6, 19, [[("Proyecto Integrador", {})], [("Ventisur", {"tam": 66, "b": True})]],
       tam=30, color=BLANCO, interl=0.95)
 texto(s, M, 10.35, 17.5, "Planificación agregada e inventarios determinísticos", tam=20, color=ON2)
-texto(s, M, 15.4, 17, [[("Gestión de Operaciones · Universidad Adolfo Ibáñez", {})],
+texto(s, M, 15.4, 17, [[("Gestión de Operaciones · Sección 2 · Universidad Adolfo Ibáñez", {})],
                        [("Cristóbal De Vidts · Constanza Catalán · Bellonce Bulnes · Matias Rojas Rodriguez", {"color": ON3})]], tam=14, color=BLANCO, esp=4)
 nota(s, "15 s. Presentar el problema: plan de 12 meses para 3 ventiladores (unidad agregada) y luego cómo comprar 5 componentes.")
 
