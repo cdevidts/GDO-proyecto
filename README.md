@@ -31,14 +31,15 @@ proyecto/
                                   y Modelo E (EOQ multiproducto, no lineal) documentado en .txt
     csv/, resumen.json
     figuras/                      fig1 y fig3 (informe), fig2 (respaldo) y slide_fig1–3 (versiones a escala 1:1 para las diapositivas)
-  03_informe/                     Informe técnico (≤ 6 páginas): informe.md → .docx y .pdf
+  03_informe/                     Informe técnico: informe.md → PDF en LaTeX (portada + cuerpo ≤ 6 págs.),
+                                  .docx y Informe_Ventisur_LaTeX.zip (para Overleaf, compilador XeLaTeX)
   04_presentacion/                Presentación de 5 min (.pptx) y guía de preparación de la defensa
 ```
 
 ## Cómo reproducir
 
-Requisitos: Python 3.10+, y para el informe `pandoc` y Node.js con Playwright
-(`npm i playwright && npx playwright install chromium`). LibreOffice es opcional: si está,
+Requisitos: Python 3.10+, y para el informe `pandoc` y XeLaTeX (TeX Live con `texlive-xetex`,
+`texlive-latex-extra`, `texlive-lang-spanish`, `texlive-fonts-extra`). LibreOffice es opcional: si está,
 la planilla se guarda con los valores ya calculados.
 
 ```bash
@@ -62,5 +63,4 @@ cd ../04_presentacion && python construir_presentacion.py # presentación
 | 9. EOQ multiproducto | 34,50 MM$/año; ambas restricciones activas |
 | 10. Sensibilidad | +10 % espacio ahorra $5.219/año; **+10 % presupuesto ahorra $386.591/año** |
 
-> Antes de entregar: completar sección, grupo e integrantes en `proyecto/03_informe/informe.md`
-> y en la portada de la presentación, y volver a generar el informe.
+> Integrantes: Cristóbal De Vidts, Constanza Catalán, Bellonce Bulnes y Matias Rojas Rodriguez.

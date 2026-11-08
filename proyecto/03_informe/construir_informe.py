@@ -1,6 +1,7 @@
-"""Convierte informe.md en Informe_Ventisur.pdf (entrega, ≤ 6 páginas) e Informe_Ventisur.docx (editable en Word).
+"""Convierte informe.md en Informe_Ventisur.pdf (entrega en LaTeX: portada + cuerpo ≤ 6 páginas) e Informe_Ventisur.docx (editable en Word).
 
-Uso:  python construir_informe.py     (requiere pandoc, python-docx y Node con Playwright)
+Uso:  python construir_informe.py          (requiere pandoc, python-docx y XeLaTeX de TeX Live)
+      python construir_informe.py --html   (PDF anterior: HTML + Chromium vía Node Playwright)
 
 Registro visual SOBRIO (ver estilo.css): texto tinta casi monocromo, tablas tipo booktabs con cifras
 alineadas a la derecha, fila total con filete, tablas y figuras numeradas. El único acento de color
@@ -357,16 +358,55 @@ const {{ chromium }} = require('playwright');
     return pdf
 
 
+def pdf_latex():
+    """PDF de entrega con LaTeX (pandoc -> plantilla.tex -> XeLaTeX): portada + cuerpo numerado.
+
+    Deja además Informe_Ventisur_LaTeX.zip (informe.tex + figuras) listo para abrir en Overleaf
+    (compilador: XeLaTeX)."""
+    import shutil
+    import tempfile
+    import zipfile
+
+    figs = AQUI.parent / "02_resultados" / "figuras"
+    tex = subprocess.run(["pandoc", "informe.md", "-t", "latex", "--template", "plantilla.tex",
+                          "--lua-filter", "filtro_latex.lua"], cwd=AQUI, check=True,
+                         capture_output=True, text=True).stdout
+    tex = tex.replace("../02_resultados/figuras/", "figuras/")
+    pdf = AQUI / "Informe_Ventisur.pdf"
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / "figuras").mkdir()
+        usadas = sorted(set(re.findall(r"figuras/([\w.-]+\.png)", tex)))
+        for f in usadas:
+            shutil.copy(figs / f, tmp / "figuras" / f)
+        (tmp / "informe.tex").write_text(tex, encoding="utf-8")
+        for _ in range(2):  # 2 pasadas: referencia a la última página ("Página x de N")
+            r = subprocess.run(["xelatex", "-interaction=nonstopmode", "-halt-on-error", "informe.tex"],
+                               cwd=tmp, capture_output=True, text=True)
+            if r.returncode:
+                raise RuntimeError("XeLaTeX falló:\n" + r.stdout[-3000:])
+        shutil.copy(tmp / "informe.pdf", pdf)
+        with zipfile.ZipFile(AQUI / "Informe_Ventisur_LaTeX.zip", "w", zipfile.ZIP_DEFLATED) as z:
+            z.write(tmp / "informe.tex", "informe.tex")
+            for f in usadas:
+                z.write(tmp / "figuras" / f, f"figuras/{f}")
+    return pdf
+
+
 def main():
     referencia()
     subprocess.run(["pandoc", "informe.md", "-o", str(DOCX), "--reference-doc", str(REF), "--resource-path", str(AQUI)],
                    cwd=AQUI, check=True)
     post_proceso()
     REF.unlink()
-    pdf = pdf_desde_html()
+    # PDF de entrega: LaTeX (por defecto). Con --html se usa la versión anterior HTML + Chromium.
+    import sys
+
+    pdf = pdf_desde_html() if "--html" in sys.argv else pdf_latex()
     info = subprocess.run(["pdfinfo", str(pdf)], capture_output=True, text=True).stdout
     paginas = int(next(l.split()[-1] for l in info.splitlines() if l.startswith("Pages")))
-    print(pdf, f"{paginas} páginas", "(OK ≤ 6)" if paginas <= 6 else "(EXCEDE el límite de 6)")
+    cuerpo = paginas - 1 if "--html" not in sys.argv else paginas  # la portada no cuenta en el límite
+    print(pdf, f"{paginas} páginas ({cuerpo} de cuerpo)", "(OK ≤ 6)" if cuerpo <= 6 else "(EXCEDE el límite de 6)")
 
 
 if __name__ == "__main__":

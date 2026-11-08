@@ -1,7 +1,7 @@
 """Figuras del informe y de la presentación (se guardan en 02_resultados/figuras).
 
 Sistema visual Ventisur, una identidad con dos registros:
-  * fig1_planes, fig2_costos, fig3_lotes -> informe (registro SOBRIO): Inter, grises tinta y un único
+  * fig1_planes, fig2_costos, fig3_lotes -> informe (registro SOBRIO): Libertinus Serif (la del PDF en LaTeX; Inter si no está), grises tinta y un único
     acento azul para el plan recomendado; ancho de caja carta (7,2 in) para insertarlas a escala 1:1.
   * slide_fig1..3 -> diapositivas (registro EXPRESIVO): Carlito (= métrica de Calibri), trazos y texto
     grandes (>= 14 pt), generadas al tamaño exacto de inserción en la diapositiva (escala 1:1).
@@ -24,6 +24,19 @@ from datos import RESULTADOS  # noqa: E402
 
 FIG = RESULTADOS / "figuras"
 
+# Las figuras del informe usan la misma tipografía que el PDF en LaTeX (Libertinus) si está instalada
+# (TeX Live); si no, Inter. Las de diapositivas usan Carlito (= Calibri).
+from pathlib import Path  # noqa: E402
+
+from matplotlib import font_manager  # noqa: E402
+
+_LIBERTINUS = Path("/usr/share/texlive/texmf-dist/fonts/opentype/public/libertinus-fonts")
+FUENTE_INFORME = "Inter"
+if _LIBERTINUS.is_dir():
+    for _f in _LIBERTINUS.glob("LibertinusSerif-*.otf"):
+        font_manager.fontManager.addfont(str(_f))
+    FUENTE_INFORME = "Libertinus Serif"
+
 # ---------------------------------------------------------------- tokens del sistema visual
 SERIE = {"P1": "#d9a336", "P2": "#cc5f22", "P3": "#8c3b2f", "A": "#2b333c", "B": "#98a2ac", "S5": "#1f5fae"}
 COMPONENTE = {"Laboral": "#d9dde2", "Contratación + despido": "#8c3b2f", "Horas extra": "#cc5f22",
@@ -35,7 +48,7 @@ INK, INK2, INK3, GRID, AXIS, BANDA = "#1c2127", "#4a535d", "#6b7580", "#eceef1",
 ACENTO, BLANCO = "#1f5fae", "#ffffff"
 
 ESTILO_INFORME = {
-    "font.family": "Inter", "font.size": 7.5, "axes.titlesize": 8.5, "axes.titleweight": "semibold",
+    "font.family": FUENTE_INFORME, "font.size": 7.5, "axes.titlesize": 8.5, "axes.titleweight": "semibold",
     "axes.titlelocation": "left", "axes.titlepad": 6, "axes.labelsize": 7.5, "axes.labelcolor": INK2,
     "xtick.labelsize": 7, "ytick.labelsize": 7, "xtick.color": INK3, "ytick.color": INK3,
     "axes.edgecolor": AXIS, "axes.linewidth": 0.6, "axes.spines.top": False, "axes.spines.right": False,

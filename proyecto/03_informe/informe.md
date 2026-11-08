@@ -1,7 +1,13 @@
 ---
-title: "Proyecto Integrador Ventisur — Informe técnico"
-subtitle: "Gestión de Operaciones · Universidad Adolfo Ibáñez · Sección [__] · Grupo [__]"
-author: "Integrantes: [Nombre 1], [Nombre 2], [Nombre 3], [Nombre 4], [Nombre 5]"
+title: "Proyecto Integrador Ventisur"
+subtitle: "Informe técnico · Gestión de Operaciones · Universidad Adolfo Ibáñez"
+author:
+  - Cristóbal De Vidts
+  - Constanza Catalán
+  - Bellonce Bulnes
+  - Matias Rojas Rodriguez
+date: "8 de noviembre de 2026"
+lang: es
 ---
 
 ::: {.respaldo custom-style="Respaldo"}
@@ -13,7 +19,7 @@ author: "Integrantes: [Nombre 1], [Nombre 2], [Nombre 3], [Nombre 4], [Nombre 5]
 ## Solicitud 1. Políticas simples
 
 | | Política 1: tasa constante | Política 2: dotación constante + HE | Política 3: persecución (solo regular) |
-|-----------|------------|----------------|------------------|
+|--------------------------|--------------------|------------------------|-----------------------------|
 | Regla | 20 trab., 10.000 u/mes regulares | 20 trab., producir $d_t$ (regular, luego HE), $I_t=1.000$ | $W_t=\lceil (d_t+I^{obj}_t-I_{t-1})/500\rceil$, $I_t=0$ salvo feb. (1.000) |
 | Mecanismo de ajuste | Inventario | Horas extra (y capacidad ociosa) | Contratación/despido |
 | Dotación | 20 fija | 20 fija | 17–25 (9 contrat., 6 desp.) |
@@ -28,7 +34,7 @@ author: "Integrantes: [Nombre 1], [Nombre 2], [Nombre 3], [Nombre 4], [Nombre 5]
 : Políticas simples: regla, recursos utilizados y costo anual.
 
 | Mes | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic | Ene | Feb |
-|------------|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|----------------|----:|----:|----:|----:|----:|----:|-----:|-----:|-----:|-----:|-----:|-----:|
 | $d_t$ | 9.500 | 9.000 | 8.500 | 8.500 | 9.000 | 9.500 | 10.000 | 10.000 | 11.500 | 12.500 | 11.500 | 10.500 |
 | P1: $I_t$ ($W$=20, $R$=10.000) | 1.500 | 2.500 | 4.000 | 5.500 | 6.500 | 7.000 | 7.000 | 7.000 | 5.500 | 3.000 | 1.500 | 1.000 |
 | P2: $R_t$ ($W$=20, $I_t$=1.000) | 9.500 | 9.000 | 8.500 | 8.500 | 9.000 | 9.500 | 10.000 | 10.000 | 10.000 | 10.000 | 10.000 | 10.000 |
@@ -69,7 +75,7 @@ sujeto a, $\forall t$:
 ## Solicitud 2. Modelo A: solución e interpretación — **Z = 300,75 MM\$**
 
 | Mes | Mar | Abr | May | Jun | Jul | Ago | Sep | Oct | Nov | Dic | Ene | Feb |
-|------------|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|----------|----:|----:|----:|----:|----:|----:|-----:|-----:|-----:|-----:|-----:|-----:|
 | $W_t$ (desp.) | 18 (−2) | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
 | $R_t$ | 8.500 | 9.000 | 8.500 | 9.000 | 9.000 | 9.000 | 9.000 | 9.000 | 9.000 | 9.000 | 9.000 | 9.000 |
 | $O_t$ | 0 | 0 | 0 | 0 | 0 | 0 | 1.000 | 1.200 | 2.700 | 2.700 | 2.700 | 2.700 |
@@ -94,7 +100,7 @@ Si $B_t>0\text{,}01d_t$ la restricción obliga $y_t=1$; si $B_t\le0\text{,}01d_t
 Al Modelo A se agrega $B_t=0\ \forall t$ (equivale a eliminar $B_t$ del balance y de la FO). La solución mantiene 18 trabajadores, las mismas 13.000 u de HE y adelanta producción: HE en octubre sube a 1.600 y el inventario de octubre–noviembre a 600 y 800 u para cubrir diciembre, donde la capacidad (9.000 + 2.700 = 11.700) es menor a la demanda (12.500).
 
 | Indicador | A (Sol. 2) | B (Sol. 3) | C (Sol. 4) |
-|--------------|-------:|-------:|-------:|
+|----------------------------|----------:|----------:|------------:|
 | Costo total (MM\$) | 300,75 | 300,94 | 301,10 |
 | Dotación / despidos | 18 / 2 | 18 / 2 | 18 / 2 |
 | Producción regular / total (u) | 107.000 / 120.000 | idem | idem |
