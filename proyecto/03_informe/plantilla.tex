@@ -1,15 +1,14 @@
-% Plantilla LaTeX del informe técnico Ventisur (pandoc -> XeLaTeX).
-% Portada sin numerar + cuerpo numerado (máx. 6 páginas, según el enunciado).
+% Plantilla LaTeX del informe Ventisur (pandoc -> XeLaTeX).
+% Portada + cuerpo numerado (el enunciado limita el cuerpo a 6 páginas).
 \documentclass[10pt,letterpaper]{article}
 
-% ---------- Tipografía e idioma ----------
+% ---------- Fuentes e idioma ----------
 \usepackage{amsmath,amssymb}
 \usepackage{fontspec}
 \usepackage{unicode-math}
-\setmainfont{LibertinusSerif}[Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
-\setsansfont{LibertinusSans}[Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic]
-\setmonofont{lmmono10-regular.otf}[Scale=0.86]
-\setmathfont{LibertinusMath-Regular.otf}
+\setmainfont{TeXGyreTermesX}[Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold,ItalicFont=*-Italic,BoldItalicFont=*-BoldItalic]
+\setmonofont{lmmono10-regular.otf}[Scale=0.88]
+\setmathfont{latinmodern-math.otf}
 \usepackage[spanish,es-tabla,es-nodecimaldot,es-noshorthands]{babel}
 \usepackage{microtype}
 \usepackage{newunicodechar}
@@ -26,47 +25,35 @@
 \newunicodechar{³}{\textsuperscript{3}}
 
 % ---------- Página ----------
-\usepackage[letterpaper,top=1.8cm,bottom=1.9cm,left=1.85cm,right=1.85cm,headsep=0.45cm,footskip=0.9cm]{geometry}
-\usepackage{xcolor}
-\definecolor{tinta}{HTML}{1C2127}
-\definecolor{gris}{HTML}{55606B}
-\definecolor{filete}{HTML}{B9C0C7}
-\definecolor{acento}{HTML}{1F5FAE}
+\usepackage[letterpaper,margin=1.9cm,headsep=0.4cm,footskip=0.8cm]{geometry}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{2.4pt plus 1pt}
-\linespread{0.985}
+\setlength{\parskip}{3pt}
 \setlength{\emergencystretch}{2em}
-\clubpenalty=10000 \widowpenalty=10000
 
-% ---------- Encabezado y pie ----------
 \usepackage{fancyhdr}
-\usepackage{lastpage}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\footnotesize\color{gris}Proyecto Integrador Ventisur --- Informe técnico}
-\fancyhead[R]{\footnotesize\color{gris}Gestión de Operaciones · Sección 2 · UAI}
-\fancyfoot[C]{\footnotesize\color{gris}Página \thepage\ de \pageref{LastPage}}
+\fancyhead[L]{\small Proyecto Integrador Ventisur}
+\fancyhead[R]{\small Gestión de Operaciones -- Sección 2}
+\fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\headrule}{\hbox to\headwidth{\color{filete}\leaders\hrule height \headrulewidth\hfill}}
 
-% ---------- Títulos de sección ----------
+% ---------- Secciones ----------
 \usepackage{titlesec}
-\titleformat{\section}{\normalfont\large\bfseries\color{tinta}}{}{0pt}{}[{\color{filete}\titlerule[0.5pt]}]
-\titlespacing*{\section}{0pt}{9pt plus 2pt}{4pt}
-\titleformat{\subsection}{\normalfont\normalsize\bfseries\color{tinta}}{}{0pt}{}
-\titlespacing*{\subsection}{0pt}{6pt plus 2pt}{1.5pt}
+\titleformat{\section}{\normalfont\large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{8pt plus 2pt}{3pt}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{6pt plus 2pt}{2pt}
 \setcounter{secnumdepth}{0}
 
 % ---------- Tablas y figuras ----------
 \usepackage{calc}
 \usepackage{array,longtable,booktabs}
 \usepackage{graphicx}
-\usepackage[font=small,labelfont=bf,labelsep=period,skip=3pt]{caption}
-\captionsetup[table]{position=top}
+\usepackage[font=small,labelfont=bf]{caption}
 \setlength{\LTpre}{3pt}
 \setlength{\LTpost}{2pt}
 \setlength{\tabcolsep}{3.6pt}
-\renewcommand{\arraystretch}{1.08}
 \AtBeginEnvironment{longtable}{\footnotesize}
 \makeatletter
 \def\fps@figure{!htbp}
@@ -74,70 +61,53 @@
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
 \makeatother
 \setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
-\setlength{\abovecaptionskip}{3pt}
 \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
-\setlength{\floatsep}{6pt plus 2pt}
 \setlength{\intextsep}{6pt plus 2pt}
 
-% ---------- Listas y bloques ----------
+% ---------- Listas ----------
 \usepackage{needspace}
 \usepackage{enumitem}
 \setlist{nosep,leftmargin=1.4em,itemsep=1.5pt}
 \providecommand{\tightlist}{\setlength{\itemsep}{1.5pt}\setlength{\parskip}{0pt}}
-% filete vertical a la izquierda del bloque de recomendación
-\usepackage{mdframed}
-\mdfdefinestyle{reco}{topline=false,bottomline=false,rightline=false,linewidth=1.1pt,linecolor=tinta,
-  innerleftmargin=7pt,innerrightmargin=0pt,innertopmargin=2pt,innerbottommargin=2pt,
-  skipabove=4pt,skipbelow=4pt,leftmargin=0pt,rightmargin=0pt}
-\newenvironment{recomendacion}{\begin{mdframed}[style=reco]}{\end{mdframed}}
+% Los bloques de recomendación van como párrafos normales
+\newenvironment{recomendacion}{\par}{\par}
 
-% ---------- Enlaces y metadatos ----------
-\usepackage[hidelinks,pdfusetitle]{hyperref}
-\hypersetup{pdftitle={$title$ --- Informe técnico},pdfauthor={$for(author)$$author$$sep$, $endfor$},
-  pdfsubject={Gestión de Operaciones, Universidad Adolfo Ibáñez}}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={$title$},pdfauthor={$for(author)$$author$$sep$, $endfor$}}
 \urlstyle{same}
 
 \begin{document}
 
 % ================= PORTADA =================
 \begin{titlepage}
-\thispagestyle{empty}
-\pagenumbering{gobble}
 \centering
-{\large\scshape Universidad Adolfo Ibáñez\par}
-\vspace{2pt}
-{\normalsize Facultad de Ingeniería y Ciencias\par}
-\vspace{1pt}
-{\normalsize Gestión de Operaciones$if(seccion)$ · $seccion$$endif$\par}
-\vspace{0.22\textheight}
-{\color{acento}\rule{0.55\textwidth}{0.9pt}\par}
-\vspace{14pt}
-{\fontsize{24}{29}\selectfont\bfseries $title$\par}
-\vspace{8pt}
-{\Large Informe técnico\par}
+{\large Universidad Adolfo Ibáñez\par}
+{Facultad de Ingeniería y Ciencias\par}
+\vspace{0.25\textheight}
+{\LARGE\bfseries $title$\par}
+\vspace{10pt}
+{\large Informe técnico\par}
 \vspace{4pt}
-{\normalsize\itshape Planificación agregada, requerimientos de materiales e inventarios determinísticos\par}
-\vspace{14pt}
-{\color{acento}\rule{0.55\textwidth}{0.9pt}\par}
+{Planificación agregada, requerimientos de materiales e inventarios determinísticos\par}
 \vfill
-{\small\scshape Integrantes\par}
-\vspace{6pt}
-$for(author)$
-{\large $author$\par}
-$endfor$
-\vspace{0.12\textheight}
-{\normalsize $date$\par}
-\vspace{18pt}
+\begin{flushleft}
+\begin{tabular}{@{}ll@{}}
+\textbf{Integrantes:} & $for(author)$$author$$sep$ \\ & $endfor$ \\[8pt]
+\textbf{Curso:} & Gestión de Operaciones \\
+\textbf{Sección:} & 2 \\
+\textbf{Fecha:} & $date$ \\
+\end{tabular}
+\end{flushleft}
+\vspace{20pt}
 $if(respaldo)$
-\begin{minipage}{0.86\textwidth}
-\footnotesize\color{gris}\raggedright
+\begin{flushleft}
+\footnotesize
 $respaldo$
-\end{minipage}
+\end{flushleft}
 $endif$
 \end{titlepage}
 
 % ================= CUERPO =================
-\pagenumbering{arabic}
 \setcounter{page}{1}
 $body$
 
