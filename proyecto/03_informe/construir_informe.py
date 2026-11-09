@@ -7,7 +7,7 @@ Registro visual SOBRIO (ver estilo.css): texto tinta casi monocromo, tablas tipo
 alineadas a la derecha, fila total con filete, tablas y figuras numeradas. El único acento de color
 (#1f5fae) es la regla bajo el bloque de título; el resto va en tinta.
   - PDF: pandoc -> HTML + MathML (estilo.css, fuente Inter) -> Chromium (Playwright de Node).
-  - DOCX: pandoc con un reference.docx generado aquí (Calibri, mismos colores y filetes).
+  - DOCX: pandoc con un reference.docx generado aquí (Times New Roman, en negro).
 """
 import json
 import re
@@ -28,8 +28,8 @@ REF = AQUI / "reference.docx"
 DOCX = AQUI / "Informe_Ventisur.docx"
 
 # Tokens del sistema visual (registro sobrio)
-INK, INK2, INK3, HAIR, HAIR2, ACENTO = "1C2127", "4A535D", "6B7580", "D9DDE2", "ECEEF1", "1F5FAE"
-FUENTE_DOCX = "Calibri"
+INK, INK2, INK3, HAIR, HAIR2, ACENTO = "000000", "333333", "555555", "BFBFBF", "D9D9D9", "000000"
+FUENTE_DOCX = "Times New Roman"
 
 # Fila "total" de una tabla: su primera celda va entera en negrita en informe.md
 # (**Total**, **Costo total (MM$)**, **Costo de elevar el servicio vs A**) -> filete superior + negrita.
@@ -74,7 +74,7 @@ def _estilo(d, nombre):
 
 
 def referencia():
-    """reference.docx de pandoc con el registro sobrio: Calibri, todo en tinta, sin azul en títulos."""
+    """reference.docx de pandoc con el Times New Roman, todo en negro."""
     datos = subprocess.run(["pandoc", "--print-default-data-file", "reference.docx"], capture_output=True, check=True).stdout
     REF.write_bytes(datos)
     d = Document(REF)
@@ -83,29 +83,29 @@ def referencia():
         s.left_margin = s.right_margin = Cm(1.8)
         s.footer_distance = Cm(0.8)
 
-    # Fuente del tema y valores por defecto -> Calibri explícito
+    # Fuente del tema y valores por defecto -> Times New Roman explícito
     for parte in d.part.package.iter_parts():
         if str(parte.partname).startswith("/word/theme/"):
             xml = parte.blob.decode("utf-8")
-            xml = re.sub(r'(<a:(?:major|minor)Font>\s*<a:latin typeface=")[^"]*"', r'\1Calibri"', xml)
+            xml = re.sub(r'(<a:(?:major|minor)Font>\s*<a:latin typeface=")[^"]*"', r'\1Times New Roman"', xml)
             parte._blob = xml.encode("utf-8")
     rpr_def = d.styles.element.find(qn("w:docDefaults")).find(qn("w:rPrDefault")).find(qn("w:rPr"))
     _rfonts(rpr_def)
 
     # nombre: (tamaño pt, negrita, color, antes pt, después pt)
     tabla = {
-        "Normal": (9.5, False, INK, 0, 0),
-        "Body Text": (9.5, False, INK, 0, 4),
-        "First Paragraph": (9.5, False, INK, 0, 4),
-        "Compact": (9.5, False, INK, 0, 3),
-        "Title": (16, True, INK, 0, 3),
-        "Subtitle": (9, False, INK2, 0, 0),
-        "Author": (9, False, INK2, 0, 10),
-        "Heading 1": (12, True, INK, 12, 3),
-        "Heading 2": (10, True, INK, 8, 2),
-        "Caption": (8, False, INK2, 0, 3),
-        "Image Caption": (8, False, INK2, 3, 9),
-        "Table Caption": (8, False, INK2, 8, 3),
+        "Normal": (11, False, INK, 0, 0),
+        "Body Text": (11, False, INK, 0, 4),
+        "First Paragraph": (11, False, INK, 0, 4),
+        "Compact": (11, False, INK, 0, 3),
+        "Title": (18, True, INK, 0, 3),
+        "Subtitle": (12, False, INK2, 0, 0),
+        "Author": (11, False, INK2, 0, 10),
+        "Heading 1": (14, True, INK, 12, 3),
+        "Heading 2": (12, True, INK, 8, 2),
+        "Caption": (9, False, INK2, 0, 3),
+        "Image Caption": (9, False, INK2, 3, 9),
+        "Table Caption": (9, False, INK2, 8, 3),
     }
     for nombre, (pt, negrita, color, antes, despues) in tabla.items():
         try:
