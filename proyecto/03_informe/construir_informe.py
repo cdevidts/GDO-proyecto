@@ -141,6 +141,10 @@ def referencia():
     reco.base_style = _estilo(d, "Body Text")
     reco.paragraph_format.space_before = Pt(4)
     reco.paragraph_format.space_after = Pt(6)
+    ecu = d.styles.add_style("Ecuacion", WD_STYLE_TYPE.PARAGRAPH)
+    ecu.base_style = _estilo(d, "Body Text")
+    ecu.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ecu.paragraph_format.space_before = ecu.paragraph_format.space_after = Pt(4)
     d.save(REF)
 
 
@@ -462,8 +466,8 @@ def pdf_latex():
 
 def main():
     referencia()
-    subprocess.run(["pandoc", "informe.md", "-o", str(DOCX), "--reference-doc", str(REF), "--resource-path", str(AQUI)],
-                   cwd=AQUI, check=True)
+    subprocess.run(["pandoc", "informe.md", "-o", str(DOCX), "--reference-doc", str(REF), "--resource-path", str(AQUI),
+                    "--lua-filter", "filtro_docx.lua"], cwd=AQUI, check=True)
     post_proceso()
     REF.unlink()
     # PDF de entrega: LaTeX (por defecto). Con --html se usa la versión anterior HTML + Chromium.
