@@ -79,9 +79,9 @@ def referencia():
     REF.write_bytes(datos)
     d = Document(REF)
     for s in d.sections:
-        s.top_margin, s.bottom_margin = Cm(1.6), Cm(1.7)
-        s.left_margin = s.right_margin = Cm(1.8)
-        s.footer_distance = Cm(0.8)
+        s.top_margin = s.bottom_margin = s.left_margin = s.right_margin = Cm(1.9)
+        s.header_distance = Cm(1.0)
+        s.footer_distance = Cm(0.9)
 
     # Fuente del tema y valores por defecto -> Times New Roman explícito
     for parte in d.part.package.iter_parts():
@@ -94,15 +94,15 @@ def referencia():
 
     # nombre: (tamaño pt, negrita, color, antes pt, después pt)
     tabla = {
-        "Normal": (11, False, INK, 0, 0),
-        "Body Text": (11, False, INK, 0, 4),
-        "First Paragraph": (11, False, INK, 0, 4),
-        "Compact": (11, False, INK, 0, 3),
+        "Normal": (10, False, INK, 0, 0),
+        "Body Text": (10, False, INK, 0, 3),
+        "First Paragraph": (10, False, INK, 0, 3),
+        "Compact": (10, False, INK, 0, 3),
         "Title": (18, True, INK, 0, 3),
         "Subtitle": (12, False, INK2, 0, 0),
         "Author": (11, False, INK2, 0, 10),
-        "Heading 1": (14, True, INK, 12, 3),
-        "Heading 2": (12, True, INK, 8, 2),
+        "Heading 1": (12, True, INK, 8, 3),
+        "Heading 2": (10, True, INK, 6, 2),
         "Caption": (9, False, INK2, 0, 3),
         "Image Caption": (9, False, INK2, 3, 9),
         "Table Caption": (9, False, INK2, 8, 3),
@@ -121,13 +121,11 @@ def referencia():
         pf.space_before, pf.space_after = Pt(antes), Pt(despues)
         if nombre in ("Body Text", "First Paragraph"):
             pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            pf.line_spacing = 1.08
-        if nombre in ("Title", "Subtitle", "Author", "Caption", "Image Caption", "Table Caption"):
-            pf.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            pf.line_spacing = 1.0
+        if nombre in ("Caption", "Image Caption", "Table Caption"):
+            pf.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _estilo(d, "Subtitle").paragraph_format.keep_with_next = True
     # Filetes: 0,75 pt sobre Heading 1; regla de acento de 1,5 pt bajo el bloque de título (único acento)
-    _borde_parrafo(_estilo(d, "Heading 1"), "top", 6, INK, 4)
-    _borde_parrafo(_estilo(d, "Author"), "bottom", 12, ACENTO, 6)
 
     codigo = _estilo(d, "Verbatim Char")  # rutas y nombres de archivo: más chicos y en gris, como en el PDF
     codigo.font.size = Pt(8)
@@ -141,10 +139,8 @@ def referencia():
     resp.paragraph_format.space_after = Pt(6)
     reco = d.styles.add_style("Recomendacion", WD_STYLE_TYPE.PARAGRAPH)
     reco.base_style = _estilo(d, "Body Text")
-    reco.paragraph_format.left_indent = Cm(0.3)
     reco.paragraph_format.space_before = Pt(4)
     reco.paragraph_format.space_after = Pt(6)
-    _borde_parrafo(reco, "left", 6, INK, 6)
     d.save(REF)
 
 
@@ -167,7 +163,7 @@ def _bordes_booktabs(tabla):
         pr.remove(viejo)
     b = OxmlElement("w:tblBorders")
     for lado, sz, color in (("top", 8, INK), ("left", 0, None), ("bottom", 8, INK), ("right", 0, None),
-                            ("insideH", 2, HAIR2), ("insideV", 0, None)):
+                            ("insideH", 0, None), ("insideV", 0, None)):
         e = OxmlElement(f"w:{lado}")
         e.set(qn("w:val"), "single" if sz else "nil")
         if sz:
@@ -209,6 +205,60 @@ def _campo(parrafo, instr):
             r.text = texto
 
 
+def _portada(d):
+    """Portada igual a la del PDF: reemplaza título/subtítulo/autores/fecha de pandoc y lleva ahí la nota de respaldo."""
+    from docx.enum.text import WD_BREAK
+
+    quitar, respaldo = [], []
+    for p in d.paragraphs:
+        nombre = p.style.name if p.style is not None else ""
+        if nombre in ("Title", "Subtitle", "Author", "Date"):
+            quitar.append(p)
+        elif nombre == "Respaldo":
+            respaldo.append(p)
+    for p in quitar + respaldo:
+        p._p.getparent().remove(p._p)
+    primero = d.paragraphs[0]
+
+    def linea(texto="", pt=10, negrita=False, centro=True, antes=0, despues=0, tab=None):
+        p = primero.insert_paragraph_before()
+        p.style = _estilo(d, "Normal")
+        pf = p.paragraph_format
+        pf.alignment = WD_ALIGN_PARAGRAPH.CENTER if centro else WD_ALIGN_PARAGRAPH.LEFT
+        pf.space_before, pf.space_after = Pt(antes), Pt(despues)
+        if tab:
+            pf.tab_stops.add_tab_stop(Cm(tab))
+        if texto:
+            partes = texto.split("**")
+            for k, t in enumerate(partes):
+                if t:
+                    r = p.add_run(t)
+                    r.font.size, r.font.name, r.font.bold = Pt(pt), FUENTE_DOCX, negrita or k % 2 == 1
+        return p
+
+    linea("Universidad Adolfo Ibáñez", 12)
+    linea("Facultad de Ingeniería y Ciencias", 10)
+    linea("Proyecto Integrador Ventisur", 17, negrita=True, antes=190)
+    linea("Informe técnico", 12, antes=10)
+    linea("Planificación agregada, requerimientos de materiales e inventarios determinísticos", 10, antes=4)
+    nombres = ["Cristóbal De Vidts", "Constanza Catalán", "Bellonce Bulnes", "Matias Rojas Rodriguez"]
+    linea(f"**Integrantes:**\t{nombres[0]}", centro=False, antes=200, tab=2.4)
+    for n in nombres[1:]:
+        linea(f"\t{n}", centro=False, tab=2.4)
+    linea("**Curso:**\tGestión de Operaciones", centro=False, antes=8, tab=2.4)
+    linea("**Sección:**\t2", centro=False, tab=2.4)
+    linea("**Fecha:**\t8 de noviembre de 2026", centro=False, tab=2.4)
+    ult = None
+    for k, p in enumerate(respaldo):
+        nuevo = linea(centro=False, antes=18 if k == 0 else 0)
+        for r in p.runs:
+            nr = nuevo.add_run(r.text)
+            nr.font.size, nr.font.name, nr.font.bold = Pt(8), FUENTE_DOCX, r.bold
+            nr.font.italic = r.italic
+        ult = nuevo
+    (ult or linea()).add_run().add_break(WD_BREAK.PAGE)
+
+
 def post_proceso():
     d = Document(DOCX)
     # Tablas tipo booktabs: filetes 1 pt arriba/abajo, 0,5 pt bajo el encabezado, separadores hairline
@@ -231,9 +281,8 @@ def post_proceso():
                     p.paragraph_format.space_before = Pt(0)
                     p.paragraph_format.line_spacing = 1.0
                     for r in p.runs:
-                        r.font.size = Pt(7.5)
-                        if i == 0 or total:
-                            r.font.bold = True
+                        r.font.size = Pt(8)
+                        r.font.bold = bool(total)
     # Numeración de pies: "Tabla n." y "Figura n."
     nt = nf = 0
     for p in d.paragraphs:
@@ -244,21 +293,39 @@ def post_proceso():
         elif estilo == "Image Caption":
             nf += 1
             _prefijo(p, f"Figura {nf}. ")
-    # Pie de página: título a la izquierda, n / N a la derecha
+    _portada(d)
+    # Figuras al 86 % del ancho de texto (igual que el PDF)
+    ancho = Cm(21.59) - Cm(1.9) * 2
+    for forma in d.inline_shapes:
+        f = ancho * 0.86 / forma.width
+        forma.width, forma.height = int(forma.width * f), int(forma.height * f)
+    # Encabezado (sin portada) y número de página centrado, como el PDF
     for s in d.sections:
         s.page_width, s.page_height = Cm(21.59), Cm(27.94)  # carta, igual que el PDF
-        pie = s.footer.paragraphs[0] if s.footer.paragraphs else s.footer.add_paragraph()
-        pie.text = ""
+        s.different_first_page_header_footer = True
+        pg = OxmlElement("w:pgNumType")
+        pg.set(qn("w:start"), "0")  # la portada es la página 0: el cuerpo parte en 1
+        s._sectPr.append(pg)
         ancho = s.page_width - s.left_margin - s.right_margin
-        pie.paragraph_format.tab_stops.add_tab_stop(ancho, WD_TAB_ALIGNMENT.RIGHT)
-        pie.add_run("Proyecto Integrador Ventisur · Informe técnico\t")
+        enc = s.header.paragraphs[0]
+        enc.text = ""
+        enc.paragraph_format.tab_stops.add_tab_stop(ancho, WD_TAB_ALIGNMENT.RIGHT)
+        enc.add_run("Proyecto Integrador Ventisur\tGestión de Operaciones – Sección 2")
+        for r in enc.runs:
+            r.font.size, r.font.name = Pt(9), FUENTE_DOCX
+        ppr = enc._p.get_or_add_pPr()
+        bdr = OxmlElement("w:pBdr")
+        b = OxmlElement("w:bottom")
+        for k, v in (("w:val", "single"), ("w:sz", "4"), ("w:space", "1"), ("w:color", "000000")):
+            b.set(qn(k), v)
+        bdr.append(b)
+        ppr.append(bdr)
+        pie = s.footer.paragraphs[0]
+        pie.text = ""
+        pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
         _campo(pie, "PAGE")
-        pie.add_run(" / ")
-        _campo(pie, "NUMPAGES")
         for r in pie.runs:
-            r.font.size = Pt(7)
-            r.font.name = FUENTE_DOCX
-            r.font.color.rgb = RGBColor.from_string(INK3)
+            r.font.size, r.font.name = Pt(10), FUENTE_DOCX
     d.save(DOCX)
 
 
