@@ -563,7 +563,7 @@ footer{margin-top:50px;color:var(--muted);font-size:.85rem}
       <tr><td>+10 % espacio (99 m³)</td><td>solo capital</td><td class="n">0</td><td class="n">0,0636</td><td class="n">34.497.798</td><td class="n">115,7</td><td class="n">5.219</td></tr>
       <tr class="rec"><td>+10 % presupuesto (121 MM$)</td><td>ambas</td><td class="n">24.785</td><td class="n">0,0135</td><td class="n">34.116.426</td><td class="n">106,8</td><td class="n"><b>386.591</b></td></tr>
     </tbody></table></div>
-  <div class="why"><b>Recomendación:</b> ampliar el presupuesto vale 74 veces más que ampliar la bodega. Que ambas estén activas no significa que valgan lo mismo: el multiplicador es una pendiente local (estimaría 45.881 para el espacio, nueve veces lo real, y 654.421 para el capital, 1,7 veces lo real) y cambia al relajar. Con más bodega, el capital pasa a limitar casi de inmediato; el capital extra, en cambio, se usa completo.</div>
+  <div class="why"><b>Recomendación:</b> ampliar el presupuesto vale 74 veces más que ampliar la bodega. Que ambas estén activas no significa que valgan lo mismo: el multiplicador es una pendiente local (estimaría 45.881 para el espacio, nueve veces lo real, y 654.421 para el capital, 1,7 veces lo real) y cambia al relajar. Con más bodega, el espacio deja de ser activo casi de inmediato (sobra desde 92,07 m³) y el capital, que ya estaba lleno, queda como único límite; el capital extra, en cambio, se usa completo hasta ≈125 MM$.</div>
   <div class="lbl">Preguntas del profesor</div>
   <div class="qa"><p class="q">¿Qué significa que una restricción esté activa?</p><p class="a">Que se usa al 100 % en el óptimo (holgura cero). Solo una restricción activa puede tener multiplicador positivo, pero estar activa no garantiza que relajarla ahorre mucho.</p></div>
   <div class="qa"><p class="q">¿Qué significa μ = 5.098?</p><p class="a">Un m³ más de bodega ahorraría ≈ $5.098 al año, solo para cambios pequeños. λ = 0,0595: un peso más de presupuesto ahorra ≈ 6 centavos al año.</p></div>
@@ -581,7 +581,7 @@ footer{margin-top:50px;color:var(--muted);font-size:.85rem}
   <div class="lbl">La historia completa en 4 frases</div>
   <ol class="steps">
     <li><b>Producción:</b> adoptar la Sol. 5 (18 trabajadores, HE sep–feb, cero pendientes, 301,1 MM$), con la opción de 19 trabajadores como seguro (+1,4 MM$).</li>
-    <li><b>Coherencia:</b> las compras usan la tasa estable de 10.000, pero el plan óptimo produce 11.700 en nov–dic. Los Dᵢ anuales no cambian (todo plan factible produce 120.000), pero en el peak el consumo diario sube 17 % y el ROP debería subir a 2.808 · 1.170 · 4.680 · 2.925 · 1.404; si no, la hélice queda corta ≈680 u.</li>
+    <li><b>Coherencia:</b> las compras usan la tasa estable de 10.000, pero el plan óptimo produce 11.700 en nov–dic. Los Dᵢ anuales no cambian (todo plan factible produce 120.000), pero en el peak el consumo diario sube 17 % y el ROP debería subir a 2.808 · 1.170 · 4.680 · 2.925 · 1.404; si no, los cinco quedan cortos en cada plazo de entrega (hélice ≈680 u, módulo 425, motor estándar 408). En el peak T &lt; L en motor estándar, hélice y módulo: esos ROP se aplican sobre la posición de inventario (bodega + pedido en camino).</li>
     <li><b>Compras:</b> usar los lotes multiproducto con sus ROP, no los EOQ individuales. Cumplir los límites cuesta solo 0,72 MM$/año frente a 2.784 de compras.</li>
     <li><b>Inversión:</b> si se puede ampliar algo, que sea el presupuesto.</li>
   </ol>

@@ -155,8 +155,8 @@ def svg_recursos():
     """Uso de espacio y capital de los EOQ individuales frente a los límites."""
     esp = list(EOQ.Espacio)
     cap = list(EOQ.Capital / 1e6)
-    x0, ancho = 120, 470
-    s = ['<svg viewBox="0 0 760 200" role="img" aria-label="Los EOQ individuales usan 113,1 metros cúbicos de 90 disponibles y 135,1 millones de 110 disponibles; la hélice ocupa casi toda la bodega">']
+    x0, ancho = 110, 440
+    s = ['<svg viewBox="0 0 800 200" role="img" aria-label="Los EOQ individuales usan 113,1 metros cúbicos de 90 disponibles y 135,1 millones de 110 disponibles; la hélice ocupa casi toda la bodega">']
     for fila, (nom, vals, lim, uni) in enumerate([("Espacio", esp, 90, "m³"), ("Capital", cap, 110, "MM$")]):
         y = 30 + fila * 78
         s.append(f'<text x="{x0 - 10}" y="{y + 20}" text-anchor="end" class="t-m t-b">{nom}</text>')
@@ -370,7 +370,7 @@ def ideas():
 <div class="card"><h4>Idea 2 · El sueldo se paga por trabajador, no por unidad</h4><p>El enunciado dice que el costo laboral se paga "por cada trabajador disponible, independientemente de que se utilice toda su capacidad". Por eso multiplica a <span class="f">Wₜ</span> y la producción regular no tiene costo propio: una vez contratado, producir en horario normal es gratis. La HE ($2.500) solo se usa cuando la regular no alcanza.</p></div>
 <div class="card"><h4>Idea 3 · El EOQ equilibra ordenar y mantener</h4><p>Lote grande: pocos pedidos (ordenar barato) pero mucho inventario (mantener caro). <span class="f">Q* = √(2DS/h)</span> es el punto donde ambos costos se igualan. <b>Q* dice cuánto pedir</b>; el punto de reorden <span class="f">ROP = d·L</span> dice <b>cuándo</b>.</p></div>
 <div class="card"><h4>Idea 4 · Activa no significa valiosa</h4><p>Una restricción activa se usa al 100 %. Su multiplicador (μ o λ) dice cuánto se ahorra con <b>una unidad más</b> de recurso, pero solo cerca del óptimo: cambia apenas se relaja. Dos restricciones activas pueden valer muy distinto.</p></div>
-<div class="card"><h4>Atajo para las preguntas "¿qué pasa si…?"</h4><p>Ubica el parámetro en la escalera o en la fórmula. Si cambia el orden de las barras, cambia el plan. Si no cambia el orden, el plan se mantiene y solo cambia el costo. Ejemplo: si el atraso costara $1.500, ya no es lo más barato, pero adelantar desde octubre (HE + 3 meses) sigue siendo más caro, así que algo de atraso se mantiene.</p></div>
+<div class="card"><h4>Atajo para las preguntas "¿qué pasa si…?"</h4><p>Ubica el parámetro en la escalera o en la fórmula. Si cambia el orden de las barras, cambia el plan. Si no cambia el orden, el plan se mantiene y solo cambia el costo. Ejemplo: si atrasar costara $1.500, ya no sería más barato que guardar, pero adelantar desde octubre (HE + 2 meses guardada = $4.500) sigue siendo más caro que HE en enero + 1 mes de atraso ($4.000), así que algo de atraso se mantiene.</p></div>
 </div></section>'''
 
 
@@ -506,7 +506,7 @@ def s2():
 {lbl(5, "Por qué · las tres decisiones que explican el plan (mira la escalera de la pág. 4)")}
 <div class="cards3">
 <div class="why"><b>1. Despide 2 y usa HE.</b> Mantener un trabajador cuesta 14,4 MM$/año (11,4 si se descuenta el despido que se evita) y solo hace falta de sep a feb. Esas ≈3.000 u con HE cuestan 7,5 MM$. Convendría mantenerlo solo si se usara 9,1 meses o más (11,4 ÷ 1,25 MM$ por mes).</div>
-<div class="why"><b>2. Adelanta solo 1–2 meses.</b> Guardar 1–2 meses ($1.000–2.000) es más barato que una HE ($2.500); 3 meses ya no. Por eso guarda en jun–jul (para agosto) y oct–nov (para dic), y deja <b>500 u ociosas en marzo y mayo</b>: guardarlas hasta septiembre costaría más de 4 meses.</div>
+<div class="why"><b>2. Adelanta solo 1–2 meses.</b> Guardar 1–2 meses ($1.000–2.000) es más barato que una HE ($2.500); 3 meses ya no. Por eso guarda en jun–jul (para agosto) y oct–nov (para dic), y deja <b>500 u ociosas en marzo y mayo</b>: guardarlas hasta septiembre serían 4 meses o más (≥ $4.000 &gt; $2.500).</div>
 <div class="why"><b>3. Atrasa en dic–ene.</b> La HE está al tope (2.700 = 150 × 18) y atrasar un mes ($750) es más barato que fabricar antes y guardar ($1.000). Los atrasos se recuperan en enero y febrero.</div>
 </div>
 <p class="small" style="margin-top:6px"><b>Mejora a las políticas</b> porque combina los tres amortiguadores que cada política usa por separado. <b>Verificaciones:</b> la relajación lineal da 300,68 (la integralidad cuesta solo 0,07 MM$) y el óptimo es único (cada variable se minimizó y maximizó con el costo fijo en Z*).</p>
@@ -538,7 +538,7 @@ def s3():
     return f'''<section class="sol parte-1">
 {cabecera("S3", "Incorporar una condición contractual de servicio (Modelo B)", "Parte I · Planificación agregada", "Dimensión 3 · 15 %", ref("Solicitud 3", "hoja ModB", "parte1_modelos.py · ModeloB_Sol3_multa.lp", "4"))}
 {lbl(1, "Lo que pide el enunciado")}
-{pide('''<p><q>Si los pedidos pendientes al término de un mes exceden el 1 % de la demanda pronosticada para ese mismo período, la empresa incurre en una multa contractual adicional de $3.000.000 durante dicho mes.</q> Modificar el modelo de la Solicitud 2; <q>presentar y explicar las modificaciones introducidas en las variables, restricciones y función objetivo, implementar el nuevo modelo y analizar cómo la condición contractual modifica las decisiones óptimas y el costo total</q>.</p>''')}
+{pide('''<p><q>si los pedidos pendientes al término de un mes exceden el 1 % de la demanda pronosticada para ese mismo período, la empresa incurre en una multa contractual adicional de $3.000.000 durante dicho mes.</q> Modificar el modelo de la Solicitud 2; <q>presentar y explicar las modificaciones introducidas en las variables, restricciones y función objetivo, implementar el nuevo modelo y analizar cómo la condición contractual modifica las decisiones óptimas y el costo total</q>.</p>''')}
 <p class="simple">En simple: al Modelo A se le agrega un costo fijo que "se enciende" si los atrasos de un mes pasan el 1 %. Un costo que salta no se puede escribir como costo por unidad: por eso se necesita una variable binaria.</p>
 {lbl(2, "Respuesta punto por punto")}
 {punto_por_punto([
@@ -620,7 +620,7 @@ def s4():
 <div class="why"><p>Los tres modelos usan las <b>mismas</b> herramientas en la misma cantidad (18 trabajadores, 107.000 u regulares, 13.000 u de HE). Lo único que cambia es el <b>calendario</b>: cuanto menos atraso se permite, más HE se adelanta a octubre y más inventario se guarda. Como guardar ($1.000) cuesta poco más que atrasar ($750), el servicio completo es casi gratis: 0,12 % del costo.</p></div>
 {lbl(6, "Si te preguntan")}
 {qa([
-        ("¿Por qué C no contrata gente para el peak?", "Un trabajador extra para sep–feb cuesta ≈11,4 MM$ al año (≈$3.800 por unidad); adelantar con HE y guardar 2 meses cuesta $4.500 por unidad solo para 400 u. Ver la escalera."),
+        ("¿Por qué C no mantiene más gente para el peak?", "Mantener un trabajador más (19) cuesta 11,4 MM$ netos (sueldo del año menos el despido que se evita) y solo ahorra 10,0 MM$ (8,75 de HE y 1,25 de inventario): sale 1,4 MM$ más caro (302,5). Contratar uno nuevo en septiembre sería aún peor (sueldo + $2,5 MM de contratación)."),
         ("¿Por qué la HE total no cambia entre A, B y C?", "Porque la producción total del año es la misma (120.000 u); solo cambia en qué mes se hace la HE."),
         ("¿Qué significa 99,5 % a tiempo?", "De las 120.000 u, 600 u-mes quedaron atrasadas al cierre de algún mes: 1 − 600/120.000 = 99,5 %."),
         ("¿C queda con holgura?", "No: la HE de nov–dic está al 100 % y la de ene–feb al 93 %. Esto se discute en S5.")])}
@@ -726,7 +726,7 @@ def s6():
         ("¿Por qué el motor estándar es 8.000 y no 5.000?", "Porque lo usan el Estándar (5.000) y el Plus (3.000). El módulo lo usan Plus y Premium; la hélice, los tres."),
         ("¿Y con mezcla 40–30–30?", "Motor est. 7.000/mes, motor prem. 3.000, hélice 10.000, módulo 6.000, control 3.000."),
         ("¿Por qué no aparece el pedestal?", "El enunciado solo analiza los cinco componentes seleccionados; los elementos comunes se omiten."),
-        ("¿Por qué usar 10.000 y no su recomendación?", "El enunciado lo exige: la Gerencia fijó esa tasa por estabilidad y coordinación con proveedores. Además da un consumo constante, que es lo que necesita el EOQ.")])}
+        ("¿Por qué usar 10.000 y no su recomendación?", "El enunciado lo exige: la Gerencia fijó esa tasa por estabilidad y coordinación con proveedores, y da un consumo constante, que es lo que necesita el EOQ. Además 10.000 × 12 = 120.000 = la demanda anual, lo mismo que produce la Sol. 5: los Dᵢ anuales son iguales con cualquiera de los dos; solo cambia cómo se reparten en el año.")])}
 <div class="trap"><b>Cuidado:</b> no confundas desagregar con lotificar (la rúbrica lo nombra como error de nivel 1). Esta etapa no dice tamaños de pedido.</div>
 </section>'''
 
@@ -744,7 +744,7 @@ def s7():
     return f'''<section class="sol parte-3">
 {cabecera("S7", "Políticas EOQ individuales", "Parte III · Inventarios determinísticos", "Dimensión 5 · 15 %", ref("Solicitudes 7 y 8", "hoja EOQ_Individual", "parte3_inventarios.py (eoq_individual)", "6"))}
 {lbl(1, "Lo que pide el enunciado")}
-{pide('''<p>Tratando cada componente por separado, con consumo y tiempo de entrega conocidos y constantes, calcular: (a) el costo anual de mantener <b>hᵢ</b>; (b) el lote económico <b>Qᵢ*</b>; (c) pedidos por año; (d) tiempo entre pedidos en días operativos; (e) consumo diario; (f) punto de reorden; (g) costos anuales de ordenar y mantener; (h) <q>interprete operacionalmente la política obtenida, indicando cuánto y cuándo debería ordenar Ventisur</q>. Además, <q>explique los principales supuestos que permiten utilizar el modelo EOQ clásico y un punto de reorden determinístico … y relacione dichos supuestos con las decisiones adoptadas en la Parte II</q>.</p>''')}
+{pide('''<p>Tratando cada componente por separado, con consumo y tiempo de entrega conocidos y constantes, calcular: (a) el costo anual de mantener <b>hᵢ</b>; (b) el lote económico <b>Qᵢ*</b>; (c) pedidos por año; (d) tiempo entre pedidos en días operativos; (e) consumo diario; (f) punto de reorden; (g) costos anuales de ordenar y mantener; (h) <q>interprete operacionalmente la política obtenida, indicando cuánto y cuándo debería ordenar Ventisur</q>. Además, <q>Explique los principales supuestos que permiten utilizar el modelo EOQ clásico y un punto de reorden determinístico … y relacione dichos supuestos con las decisiones adoptadas en la Parte II</q>.</p>''')}
 <p class="simple">En simple: para cada pieza, decidir de qué tamaño hacer cada pedido (cuánto) y con cuánto stock en bodega emitirlo (cuándo).</p>
 {lbl(2, "Respuesta punto por punto")}
 {punto_por_punto([
@@ -806,11 +806,11 @@ def s8():
 <figure>{svg_recursos()}<figcaption>Figura 8.1 · Uso de cada recurso por componente. Ambos se pasan del límite.</figcaption></figure>
 {t}
 {lbl(5, "Por qué")}
-<div class="why"><p>Cada EOQ se calculó mirando solo su propio costo. Nada lo obligaba a compartir. La <b>hélice</b> es voluminosa (0,015 m³, la más grande) y barata de mantener, por eso su lote es grande y llena la bodega. Los <b>motores</b> son caros y concentran el capital (63 %). La suma de decisiones óptimas por separado no es óptima ni factible para el sistema completo: hay que decidir los cinco lotes juntos (S9).</p></div>
+<div class="why"><p>Cada EOQ se calculó mirando solo su propio costo. Nada lo obligaba a compartir. La <b>hélice</b> es voluminosa (0,015 m³, la más grande) y barata de mantener, por eso su lote es grande y llena la bodega. Los <b>motores</b> son caros y concentran el capital: 69,8 de los 135,1 MM$ (52 %); solos ya ocupan el 63 % del límite de 110. La suma de decisiones óptimas por separado no es óptima ni factible para el sistema completo: hay que decidir los cinco lotes juntos (S9).</p></div>
 {lbl(6, "Si te preguntan")}
 {qa([
         ("¿Qué componente causa el problema de espacio? ¿Y el de capital?", "Espacio: la hélice (84,9 de 113,1 m³). Capital: los motores (40,7 + 29,1 de 135,1 MM$)."),
-        ("¿Bastaría con achicar solo el lote de la hélice?", "Arreglaría el espacio, pero el capital seguiría excedido en 25 MM$. Hay que ajustar todos."),
+        ("¿Bastaría con achicar solo el lote de la hélice?", "Arreglaría el espacio (la hélice bajaría a ≈4.117 u), pero el capital seguiría excedido en ≈18 MM$ (128,2 de 110): solo los motores ya suman 69,8 MM$. Hay que ajustar todos."),
         ("¿Y si se midiera con el inventario promedio (Q/2)?", "Los EOQ usarían 56,6 m³ y 67,6 MM$ y cabrían. Usamos lotes completos porque es lo que pide el enunciado y es lo conservador."),
         ("¿Se pierde mucho por no poder usar los EOQ?", "No: la S9 muestra que cumplir los límites cuesta solo 0,72 MM$/año (+2,1 %).")])}
 <div class="trap"><b>Cuidado:</b> decir solo "es infactible" no basta: hay que mostrar el uso de cada recurso y explicar por qué pasa.</div>
@@ -837,7 +837,7 @@ def s9():
 {cabecera("S9", "Formular e implementar un EOQ multiproducto restringido", "Parte III · Inventarios determinísticos", "Dimensión 6 · 20 %", ref("Solicitud 9", "hojas EOQ_Multiproducto, Resumen_Multiproducto", "parte3_inventarios.py (multiproducto, verificar_slsqp) · ModeloE_Sol9_EOQ_multiproducto.txt", "7"))}
 {lbl(1, "Lo que pide el enunciado")}
 {pide('''<p><q>Formule e implemente un modelo de optimización que determine simultáneamente los tamaños de lote de los cinco componentes, minimizando el costo relevante anual de inventarios y respetando las restricciones de espacio y capital disponible.</q> Debe: (a) definir las variables; (b) formular y explicar la función objetivo; (c) formular y explicar las restricciones; (d) <q>justificar por qué el costo anual de compra … no modifica la elección de los tamaños de lote</q>; (e) implementar y resolver; (f) comparar con los EOQ individuales; (g) analizar cambios en lotes, frecuencia y costos; (h) <q>explicar qué significa que una restricción se encuentre activa en la solución óptima</q>.</p>''')}
-<p class="simple">En simple: elegir los cinco lotes al mismo tiempo, lo más parecidos posible a los EOQ, pero que quepan en 90 m³ y 110 MM$.</p>
+<p class="simple">En simple: elegir los cinco lotes al mismo tiempo, con el menor costo total de ordenar + mantener, pero que quepan en 90 m³ y 110 MM$.</p>
 {lbl(2, "Respuesta punto por punto")}
 {punto_por_punto([
         ("(a) Variables", "Qᵢ &gt; 0: unidades por pedido de cada componente (5 variables continuas).", "Cómo"),
@@ -852,22 +852,24 @@ def s9():
 <div class="formula">min Σᵢ ( Dᵢ·Sᵢ/Qᵢ + hᵢ·Qᵢ/2 ) &nbsp;&nbsp; s.a. &nbsp; Σᵢ vᵢ·Qᵢ ≤ 90 &nbsp;(μ) &nbsp;&nbsp; Σᵢ cᵢ·Qᵢ ≤ 110.000.000 &nbsp;(λ) &nbsp;&nbsp; Qᵢ &gt; 0<br>
 Lagrange: derivar y despejar &nbsp;⇒&nbsp; Qᵢ = √( 2·Dᵢ·Sᵢ / (hᵢ + 2μ·vᵢ + 2λ·cᵢ) )</div>
 <p>La fórmula es la del EOQ con un <b>costo de mantener aumentado</b>: cada recurso escaso suma un recargo (2μvᵢ por espacio y 2λcᵢ por capital). Buscamos μ y λ ≥ 0 tales que se cumplan las restricciones y, si una no está llena, su multiplicador sea 0. El problema es convexo, así que el resultado es el óptimo global.</p>
-<div class="ej"><div class="ej-t">Ejemplo calculado a mano: hélice–rejilla con μ = 5.098 y λ = 0,0595</div>
-<p>h aumentado = 1.125 + 2 × 5.098 × 0,015 + 2 × 0,0595 × 4.500 = 1.125 + 153 + 535 = <b>1.813</b> (+61 %). Q = √(2 × 120.000 × 150.000 / 1.813) = <b>4.456</b> (−21 % frente a 5.657). El motor estándar tiene un recargo de +49 %, por eso baja menos (−18 %).</p></div>
+<div class="ej"><div class="ej-t">Ejemplo calculado a mano: hélice–rejilla</div>
+<p>Con μ = 5.098 y λ = 0,0595: h aumentado = 1.125 + 2 × 5.098 × 0,015 + 2 × 0,0595 × 4.500 = 1.125 + 153 + 535 = <b>1.813</b> (+61 %). Q = √(2 × 120.000 × 150.000 / 1.813) = <b>4.456</b> (−21 % frente a 5.657). El motor estándar tiene un recargo de +49 %, por eso baja menos (−18 %).</p></div>
 {lbl(4, "Resultados · 34,50 MM$/año")}
 {t}
 {tc}
 <figure>{svg_eoq()}<figcaption>Figura 9.1 · Costo anual del motor estándar según su lote. La curva es plana cerca del óptimo: achicar el lote 18 % lo encarece solo 2 %.</figcaption></figure>
 {lbl(5, "Por qué")}
-<div class="why"><p><b>Lotes más chicos ⇒ más pedidos ⇒ más costo de ordenar y menos de mantener.</b> El costo total sube poco porque la curva de costo es plana cerca del EOQ. Los lotes no bajan todos igual: baja más el que más consume del recurso escaso en relación con su h (la hélice, por espacio).</p>
-<p><b>Restricción activa:</b> en el óptimo se usa completa (holgura cero). Su <b>multiplicador</b> es cuánto bajaría el costo con una unidad más de recurso: <b>μ = 5.098 $/m³-año</b> y <b>λ = 0,0595 $ por $ al año</b> (6 centavos por cada peso más de presupuesto). Si no estuviera activa, su multiplicador sería 0. Los puntos de reorden no cambian (ROP = d·L no depende de Q) porque T sigue mayor que L (hélice: 8,9 &gt; 8 días).</p></div>
+<div class="why"><p><b>Lotes más chicos ⇒ más pedidos ⇒ más costo de ordenar y menos de mantener.</b> El costo total sube poco porque la curva de costo es plana cerca del EOQ.</p>
+<p><b>Por qué cuatro lotes bajan 18 % y la hélice 21 %:</b> como h = 0,25·c, el recargo del capital (2λc) es el mismo 48 % de h en los cinco componentes (8λ = 8 × 0,0595): por eso el capital achica a todos ≈18 %. Lo que los diferencia es el espacio: su recargo (2μv) es 14 % de h en la hélice y menos de 1,4 % en los demás. Por lo mismo, con el capital lleno el costo de mantener da exacto 0,25 × 110/2 = 13,75 MM$.</p>
+<p><b>Restricción activa:</b> en el óptimo se usa completa (holgura cero). Su <b>multiplicador</b> es cuánto bajaría el costo con una unidad más de recurso: <b>μ = 5.098 $/m³-año</b> y <b>λ = 0,0595 $ por $ al año</b> (6 centavos por cada peso más de presupuesto). Si no estuviera activa, su multiplicador sería 0.</p>
+<p><b>Puntos de reorden:</b> ROP = d·L no depende de Q, así que no cambian. Como T sigue mayor que L (hélice 8,9 &gt; 8; motor estándar 7,0 &gt; 6), al reordenar no hay pedidos en camino y el ROP se lee directo en bodega. Si T bajara de L (pasa en el peak de la Parte I, ver Final), el ROP sigue siendo d·L pero se aplica sobre la posición de inventario (bodega + pedidos en camino).</p></div>
 {lbl(6, "Si te preguntan")}
 {qa([
-        ("¿Por qué no basta achicar todos los EOQ en la misma proporción?", "Con un factor de 0,796 se cumple la bodega, pero cuesta 34,67 MM$ (163 mil más que el óptimo): espacio y capital pesan distinto en cada componente."),
+        ("¿Por qué no basta achicar todos los EOQ en la misma proporción?", "Con un factor de 0,796 (−20,4 %) se cumplen ambos límites (bodega justa en 90 m³, capital en 107,5 de 110), pero cuesta 34,67 MM$ (163 mil más que el óptimo): espacio y capital pesan distinto en cada componente."),
         ("¿Cómo saben que es el óptimo global?", "La función es convexa (DS/Q es convexa y hQ/2 es lineal) y las restricciones son lineales: si se cumplen las condiciones KKT, es el óptimo global. SLSQP da lo mismo."),
         ("¿Por qué no incluir el costo de compra?", "Es una constante (2.784 MM$/año): no cambia con Q, así que no cambia qué Q es mejor. Con descuentos por cantidad sí habría que incluirlo."),
         ("¿Qué significa λ = 0,0595?", "Un peso más de presupuesto en lotes ahorraría ≈6 centavos al año. Es una tasa marginal: vale para cambios pequeños."),
-        ("¿Cambian los puntos de reorden?", "No: ROP = d·L no depende del lote, mientras el ciclo T siga siendo mayor que el plazo L."),
+        ("¿Cambian los puntos de reorden?", "No: ROP = d·L no depende del lote. Como T sigue mayor que L, se lee directo en bodega; si no, se aplicaría sobre la posición de inventario."),
         ("¿Qué pasa si sacamos la restricción de capital?", "Solo limita el espacio: 34.089.228 $/año, pero usaría 125,1 MM$ de capital.")])}
 <div class="trap"><b>Cuidado:</b> el multiplicador no es un "precio fijo" del recurso. Es una pendiente local que cambia apenas se relaja la restricción (ver S10).</div>
 </section>'''
@@ -882,7 +884,7 @@ def s10():
         filas.append([NOMBRES[k], n(qb), n(L["+10% espacio"].Q[k]), n(100 * (L["+10% espacio"].Q[k] / qb - 1), 1) + " %",
                       n(L["+10% presupuesto"].Q[k]), n(100 * (L["+10% presupuesto"].Q[k] / qb - 1), 1) + " %"])
     tl = tabla(["Componente", "Q base", "Q +10 % espacio", "Cambio", "Q +10 % presupuesto", "Cambio"], filas,
-               num=(1, 2, 3, 4, 5), cap="Tabla 10.1 · Efecto sobre los tamaños de lote")
+               num=(1, 2, 3, 4, 5), cap="Tabla 10.2 · Efecto sobre los tamaños de lote")
     fr = []
     for s, etq in zip(sc, ["Base (90 m³; 110 MM$)", "a) +10 % espacio (99 m³)", "b) +10 % presupuesto (121 MM$)"]):
         r = MUL.loc[s]
@@ -891,7 +893,7 @@ def s10():
         fr.append([etq, f"{n(r.Espacio_usado, 2)} de {n(r.V)}", f"{mm(r.Capital_usado, 1)} de {mm(r.K, 0)}", act, n(r.mu), n(r.lam, 4),
                    n(r.Costo_relevante), n(r.Pedidos_totales, 1), "—" if s == "Base" else f"<b>{n(ahorro)}</b>"])
     tr = tabla(["Escenario", "Espacio usado (m³)", "Capital usado (MM$)", "Activas", "μ", "λ", "Costo $/año", "Pedidos", "Ahorro $/año"], fr,
-               num=(4, 5, 6, 7, 8), rec=(2,), cap="Tabla 10.2 · Los tres escenarios")
+               num=(4, 5, 6, 7, 8), rec=(2,), cap="Tabla 10.1 · Los tres escenarios")
     return f'''<section class="sol parte-3">
 {cabecera("S10", "Análisis de sensibilidad y recomendación", "Parte III · Inventarios determinísticos", "Dimensión 6 · 20 %", ref("Solicitud 10", "hoja Resumen_Multiproducto", "parte3_inventarios.py (tabla_multiproducto)", "7"))}
 {lbl(1, "Lo que pide el enunciado")}
@@ -899,23 +901,23 @@ def s10():
 <p class="simple">En simple: si la Gerencia pudiera agrandar un solo recurso, ¿cuál le conviene?</p>
 {lbl(2, "Respuesta punto por punto")}
 {punto_por_punto([
-        ("Resolver cada escenario", "Mismo modelo de S9 con V = 99 m³ o K = 121 MM$.", "Tabla 10.2"),
-        ("Efecto sobre los lotes", "a) casi no cambian (hélice +3 %, resto −1 %). b) suben 13–14 % todos menos la hélice, que baja 4,5 %.", "Tabla 10.1"),
-        ("Utilización de espacio y presupuesto", "a) usa solo 92,07 de 99 m³ y todo el capital. b) usa todo: 90 m³ y 121 MM$.", "Tabla 10.2"),
-        ("Costo relevante", "Base 34.503.017 · a) 34.497.798 (−5.219) · b) 34.116.426 (<b>−386.591</b>).", "Tabla 10.2"),
-        ("Qué restricciones siguen activas", "a) el espacio deja de ser activa (μ = 0); queda solo el capital. b) siguen ambas (μ sube a 24.785, λ baja a 0,0135).", "Tabla 10.2"),
+        ("Resolver cada escenario", "Mismo modelo de S9 con V = 99 m³ o K = 121 MM$.", "Tabla 10.1"),
+        ("Efecto sobre los lotes", "a) casi no cambian (hélice +3 %, resto −1 %). b) suben 13–14 % todos menos la hélice, que baja 4,5 %.", "Tabla 10.2"),
+        ("Utilización de espacio y presupuesto", "a) usa solo 92,07 de 99 m³ y todo el capital. b) usa todo: 90 m³ y 121 MM$.", "Tabla 10.1"),
+        ("Costo relevante", "Base 34.503.017 · a) 34.497.798 (−5.219) · b) 34.116.426 (<b>−386.591</b>).", "Tabla 10.1"),
+        ("Qué restricciones siguen activas", "a) el espacio deja de ser activa (μ = 0); queda solo el capital. b) siguen ambas (μ sube a 24.785, λ baja a 0,0135).", "Tabla 10.1"),
         ("Cuál genera más valor", "<b>El presupuesto</b>: ahorra 74 veces más.", "Recomendación"),
-        ("Por qué dos activas no valen lo mismo", "El multiplicador es una pendiente local. Con más bodega, el capital pasa a limitar casi de inmediato; el capital extra, en cambio, se usa completo.", "Por qué")])}
+        ("Por qué dos activas no valen lo mismo", "El multiplicador es una pendiente local. Con más bodega, el espacio deja de ser activo casi de inmediato (sobra desde 92,07 m³) y el capital, que ya estaba lleno, queda como único límite. El capital extra, en cambio, se usa completo hasta ≈125 MM$.", "Por qué")])}
 {lbl(3, "Cómo lo hicimos")}
-<p>Se resolvió el mismo modelo dos veces más cambiando solo V o K. Además se recorrió cada recurso desde su valor actual hasta +11 % para ver dónde se "satura" (Figura 10.1).</p>
+<p>Se resolvió el mismo modelo dos veces más cambiando solo V o K. Además se recorrió el espacio de 90 a 100 m³ (+11 %) y el capital de 110 a 130 MM$ (+18 %) para ver dónde se "satura" cada uno (Figura 10.1).</p>
 <div class="ej"><div class="ej-t">Estimación con los multiplicadores vs resultado real</div>
-<p>Espacio: μ × 9 m³ = 5.098 × 9 = 45.881, pero el ahorro real es solo <b>5.219</b> (9 veces menos). Capital: λ × 11 MM$ = 0,0595 × 11.000.000 = 654.421, real <b>386.591</b>. Los multiplicadores sirven para cambios chicos; para cambios grandes hay que volver a resolver.</p></div>
+<p>Espacio: μ × 9 m³ ≈ 5.098 × 9 ≈ 45.880, pero el ahorro real es solo <b>5.219</b> (9 veces menos). Capital: λ × 11 MM$ ≈ 0,0595 × 11.000.000 ≈ 654.500, pero el real es <b>386.591</b>. Los multiplicadores sirven para cambios chicos; para cambios grandes hay que volver a resolver.</p></div>
 {lbl(4, "Resultados")}
 {tr}
 {tl}
 <figure>{svg_valor()}<figcaption>Figura 10.1 · Ahorro anual al ampliar cada recurso, en la misma escala vertical. La bodega deja de servir en 92,07 m³ (de los 9 m³ nuevos solo se usan 2,07). El presupuesto se aprovecha completo hasta ≈125 MM$.</figcaption></figure>
 {lbl(5, "Por qué")}
-<div class="why"><p><b>Activa no implica valiosa.</b> Las dos restricciones están llenas en la base, pero eso solo dice que relajarlas un poco ayuda. Cuando se agrega espacio, los lotes crecen hasta que el <b>capital</b> se llena (con solo 2,07 m³ extra): desde ahí, más bodega no sirve, y el ahorro máximo posible es 5.219 $/año. Cuando se agrega presupuesto, los motores (caros y chicos) pueden crecer y la hélice cede espacio: el capital extra se usa entero y el ahorro sigue creciendo hasta ≈125 MM$ (máximo 413.790 $/año; el +10 % ya captura el 93 %).</p></div>
+<div class="why"><p><b>Activa no implica valiosa.</b> Las dos restricciones están llenas en la base, pero eso solo dice que relajarlas un poco ayuda. <b>Con más bodega</b>, el capital ya estaba lleno y sigue lleno (110 MM$): la hélice crece 3 % y los demás ceden ≈1 %. Con solo 2,07 m³ extra el espacio deja de ser activo (μ = 0): si solo limita el capital, todos los lotes quedan en el 81,4 % de su EOQ (110 ÷ 135,1) y ocupan 0,814 × 113,1 = 92,07 m³. Desde ahí más bodega no sirve: el ahorro máximo posible es 5.219 $/año. <b>Con más presupuesto</b>, los cuatro componentes que usan poco espacio por peso crecen (control y módulo +14 %, motores +13 %) y la hélice cede espacio (−4,5 %): el capital extra se usa entero y el ahorro sigue creciendo hasta ≈125 MM$ (máximo 413.790 $/año; el +10 % ya captura el 93 %).</p></div>
 <div class="reco"><div class="reco-t">Nuestra recomendación</div>
 <p><b>Si la Gerencia puede flexibilizar un recurso, que sea el presupuesto (+10 %): ahorra 386.591 $/año contra 5.219 de la bodega.</b> Ampliar la bodega no vale la pena. El ahorro es una rentabilidad media de 3,5 % sobre los 11 MM$ extra (la marginal parte en 5,95 % y cae a 1,35 %); como h ya incluye el costo de capital, es un beneficio neto.</p></div>
 {lbl(6, "Si te preguntan")}
@@ -932,18 +934,19 @@ def final():
     return f'''<section class="sol parte-x">
 {cabecera("F", "Recomendación final del proyecto", "Integración", "Dimensión 7 · 10 %", ref("Recomendación final integrada", "Leeme", "run_all.py", "8"))}
 {lbl(1, "Lo que pide el enunciado")}
-{pide('''<p><q>Una síntesis integrada de las principales conclusiones obtenidas en ambas áreas de decisión.</q> <q>Se espera que el equipo conecte los resultados de planificación agregada con las decisiones de abastecimiento e inventario, identifique los principales trade-offs observados y formule recomendaciones comprensibles para una audiencia gerencial.</q> No repetir las respuestas de cada solicitud: elegir lo más relevante y decir qué debe hacer Ventisur y por qué.</p>''')}
+{pide('''<p><q>una síntesis integrada de las principales conclusiones obtenidas en ambas áreas de decisión.</q> <q>Se espera que el equipo conecte los resultados de planificación agregada con las decisiones de abastecimiento e inventario, identifique los principales trade-offs observados y formule recomendaciones comprensibles para una audiencia gerencial.</q></p>''')}
 {lbl(2, "Respuesta punto por punto")}
 {punto_por_punto([
-        ("Conectar planificación con abastecimiento", "La Parte I fija cuánto se produce; eso define el consumo de piezas (Parte II) y por lo tanto los lotes y ROP (Parte III). Ojo con el desfase del peak (abajo).", "Las 4 recomendaciones"),
+        ("Conectar planificación con abastecimiento", "Producción (Parte I) → consumo de piezas (Parte II) → lotes y ROP (Parte III). Ojo con el peak (punto 2).", "Punto 2"),
         ("Trade-offs principales", "Costo vs servicio; costo vs holgura ante errores; tamaño de lote vs recursos; espacio vs capital.", "Tabla F.1"),
-        ("Recomendaciones para la Gerencia", "Cuatro decisiones concretas.", "Las 4 recomendaciones")])}
+        ("Recomendaciones para la Gerencia", "Cuatro decisiones concretas.", "Puntos 1–4")])}
 {lbl(3, "Las 4 recomendaciones (dilas en este orden)")}
 <ol class="big">
 <li><b>Producción:</b> adoptar la Sol. 5: 18 trabajadores, HE en septiembre–febrero y cero pendientes (301,10 MM$, 13,9 MM$ menos que la mejor política simple). Si se desconfía del pronóstico, mantener 19 trabajadores como seguro (+1,4 MM$).</li>
-<li><b>Coherencia entre las partes:</b> las compras usan la tasa estable de 10.000 u/mes, pero el plan recomendado produce 11.700 en nov–dic. La demanda anual Dᵢ no cambia (todo plan produce 120.000), pero en el peak el consumo diario sube 17 % y el ROP debería subir a 2.808 · 1.170 · 4.680 · 2.925 · 1.404. Si no se ajusta, la hélice queda corta en ≈680 u durante cada plazo de entrega del peak.</li>
+<li><b>Coherencia entre las partes:</b> las compras usan 10.000 u/mes, pero el plan produce 10.600 en octubre, 11.700 en nov–dic y 11.500 en ene–feb. Los Dᵢ anuales no cambian (todo plan produce 120.000), pero en nov–dic el consumo diario sube 17 %: los ROP deberían subir a 2.808 · 1.170 · 4.680 · 2.925 · 1.404; si no, los cinco quedan cortos en cada plazo de entrega (hélice ≈680 u, módulo 425, motor estándar 408, control 204, motor premium 170). Como en el peak T &lt; L en motor estándar (5,9 vs 6 días), hélice (7,6 vs 8) y módulo (9,7 vs 10), esos ROP se aplican sobre la posición de inventario (bodega + pedido en camino).</li>
 <li><b>Compras:</b> usar los lotes multiproducto con sus ROP, no los EOQ individuales (que no caben). Cumplir los límites cuesta solo 0,72 MM$/año, frente a 2.784 MM$/año de compras.</li>
 <li><b>Inversión:</b> si se puede ampliar un recurso, que sea el presupuesto de lotes, no la bodega.</li></ol>
+{lbl(4, "Resultados · los trade-offs del proyecto")}
 {tabla(["Trade-off", "Lo que se gana", "Lo que se paga", "Nuestra decisión"], [
         ["Servicio vs costo", "100 % a tiempo, sin riesgo de multa", "+350.000 frente a A", "Servicio completo (Sol. 5)"],
         ["Costo vs holgura", "Plan más barato (18 trabajadores)", "HE al 100 % en nov–dic", "18, con opción de 19 como seguro"],
@@ -952,7 +955,7 @@ def final():
         cap="Tabla F.1 · Los trade-offs del proyecto")}
 {lbl(5, "Supuestos y limitaciones (dilos antes de que te los pregunten)")}
 <div class="dos small"><div><ul><li>Demanda y plazos determinísticos: sin stock de seguridad.</li><li>Unidad agregada homogénea: cualquier ventilador usa la misma capacidad.</li><li>Productividad y costos constantes todo el año.</li></ul></div>
-<div><ul><li>Espacio y capital medidos para todos los lotes completos a la vez: con llegadas escalonadas se necesitaría menos.</li><li>El EOQ supone consumo uniforme, pero el plan agregado no es plano (punto 2).</li><li>La recomendación de la Parte I depende del pronóstico de diciembre.</li></ul></div></div>
+<div><ul><li>Espacio y capital medidos para todos los lotes completos a la vez: con llegadas escalonadas se necesitaría menos.</li><li>El EOQ supone consumo uniforme, pero el plan agregado no es plano (punto 2).</li></ul></div></div>
 {lbl(6, "Si te preguntan")}
 {qa([
         ("¿Qué decisión responde cada modelo?", "A–C y Sol. 5: con cuánta gente y cuánto producir cada mes. Desagregación: cuánto se consume. EOQ: cuánto pedir; ROP: cuándo. Multiproducto: cuánto pedir cuando los lotes compiten por bodega y capital."),
@@ -978,7 +981,8 @@ def anexos():
         ["Umbral de la multa 3,2 % / 0 %", "B se vuelve A / se vuelve C", "300,75 / 301,10"],
         ["Demanda de diciembre +5 % / +10 % (conocida)", "Sigue con 18 y más HE", "303,91 / 306,90"],
         ["Mezcla 40–30–30", "Motor est. 7.000, prem. 3.000, módulo 6.000, control 3.000 u/mes", "—"],
-        ["Demanda de un componente × 2", "Q* × 1,41 y ROP × 2", "—"],
+        ["Demanda de un componente × 2 (EOQ individual)", "Q* × 1,41 y ROP × 2", "—"],
+        ["Demanda de la hélice × 2 (multiproducto)", "Su lote casi no cambia (4.456 → 4.460) porque la bodega sigue llena: μ sube a 70.284 y se pide el doble de veces", "—"],
         ["Tiempo de entrega mayor", "Sube el ROP; Q* no cambia", "—"],
         ["Tasa de mantención 20 % / 30 %", "EOQ siguen sin caber (126,5 m³ / 103,2 m³)", "—"],
         ["Solo restricción de espacio", "Usaría 125,1 MM$ de capital", "34.089.228 $/año"],
