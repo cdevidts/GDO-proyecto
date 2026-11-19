@@ -1,0 +1,8 @@
+pulp==2.9.0        # modelado MILP; incluye el solver CBC
+scipy>=1.11        # verificación cruzada del EOQ multiproducto (SLSQP)
+numpy>=1.26
+pandas>=2.0
+openpyxl>=3.1
+matplotlib>=3.8
+python-pptx>=0.6     # presentación
+python-docx>=1.1     # informe .docx
